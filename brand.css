@@ -1,0 +1,55 @@
+.brand {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.brand-logo {
+  width: 190px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 7px 10px;
+  background: #fff;
+  border-radius: 9px;
+}
+
+.brand-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.product-name {
+  padding-left: 2px;
+  letter-spacing: -.02em;
+}
+
+.product-name span {
+  color: var(--lime);
+}
+
+.sidebar nav {
+  margin-top: 25px;
+}
+
+.mode-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.mode-badge.online {
+  color: #285878;
+  background: #e1eef5;
+}
+
+.mode-badge.offline {
+  color: #376356;
+  background: #e3f0eb;
+}
