@@ -10,6 +10,8 @@ Open `index.html` in a modern browser. The included demo data is ready to genera
 
 - VE staff, class, location, and weekly activity setup
 - VE staff availability and maximum-period constraints
+- Activity eligibility configured for each VE staff member
+- Fixed weekday/period sessions scheduled before flexible sessions
 - Online and offline activity scheduling
 - Automatic scheduling with class, staff, and location clash prevention
 - Class-wise and VE staff-wise timetable views

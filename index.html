@@ -21,8 +21,8 @@
       <nav aria-label="Main navigation">
         <p class="nav-label">Workspace</p>
         <button class="nav-item active" data-view="dashboard"><span>⌂</span>Overview</button>
-        <button class="nav-item" data-view="setup"><span>⊞</span>School setup</button>
-        <button class="nav-item" data-view="requirements"><span>≡</span>Activity requirements</button>
+        <button class="nav-item" data-view="setup"><span>⊞</span>VE Field Setup</button>
+        <button class="nav-item" data-view="sessions"><span>≡</span>Session Scheduling</button>
         <button class="nav-item" data-view="timetable"><span>▦</span>Timetable</button>
         <p class="nav-label">Tools</p>
         <button class="nav-item" data-action="validate"><span>✓</span>Check data</button>
@@ -44,29 +44,29 @@
 
       <section class="view active" id="dashboard-view">
         <div class="hero-card">
-          <div><h2>Build a timetable your school can actually use.</h2><p>Set up your VE staff, classes and activity needs. VE Scheduler finds a conflict-free plan and flags the constraints that need attention.</p><div class="hero-actions"><button class="btn dark" data-action="generate">Generate now <span>→</span></button><button class="text-btn" data-view="setup">Review school setup</button></div></div>
+          <div><h2>Build a timetable your school can actually use.</h2><p>Set up your VE staff, classes and activity needs. VE Scheduler finds a conflict-free plan and flags the constraints that need attention.</p><div class="hero-actions"><button class="btn dark" data-action="generate">Generate now <span>→</span></button><button class="text-btn" data-view="setup">Review VE Field Setup</button></div></div>
           <div class="hero-visual" aria-hidden="true"><div class="mini-grid"><span></span><b>MON</b><b>TUE</b><b>WED</b><i>1</i><em class="a"></em><em class="b"></em><em></em><i>2</i><em></em><em class="c"></em><em class="a"></em><i>3</i><em class="b"></em><em></em><em class="c"></em></div><div class="float-note">No clashes <strong>✓</strong></div></div>
         </div>
         <div class="metrics" id="metrics"></div>
         <div class="dashboard-grid">
           <article class="card readiness"><div class="card-head"><div><span class="section-kicker">SETUP PROGRESS</span><h3>Ready to schedule</h3></div><strong id="ready-percent">0%</strong></div><div class="progress"><i id="ready-bar"></i></div><div id="checklist" class="checklist"></div></article>
-          <article class="card activity"><div class="card-head"><div><span class="section-kicker">AT A GLANCE</span><h3>Weekly activity load</h3></div><button class="icon-btn" data-view="requirements" aria-label="Open requirements">→</button></div><div id="load-chart" class="load-chart"></div></article>
+          <article class="card activity"><div class="card-head"><div><span class="section-kicker">AT A GLANCE</span><h3>Weekly activity load</h3></div><button class="icon-btn" data-view="sessions" aria-label="Open sessions">→</button></div><div id="load-chart" class="load-chart"></div></article>
         </div>
       </section>
 
       <section class="view" id="setup-view">
-        <div class="section-intro"><div><span class="section-kicker">FOUNDATION</span><h2>School setup</h2><p>Define the people and groups that can appear in the timetable.</p></div><button class="btn secondary" data-action="reset-demo">Restore demo data</button></div>
+        <div class="section-intro"><div><span class="section-kicker">FOUNDATION</span><h2>VE Field Setup</h2><p>Define the people and groups that can appear in the timetable.</p></div><button class="btn secondary" data-action="reset-demo">Restore demo data</button></div>
         <div class="setup-grid">
-          <article class="card data-card"><div class="card-head"><div><h3>VE Staff</h3><p id="teacher-count"></p></div><button class="add-btn" data-add="teacher">+ Add staff member</button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Code</th><th>Max / day</th><th>Unavailable</th><th></th></tr></thead><tbody id="teachers-body"></tbody></table></div></article>
+          <article class="card data-card"><div class="card-head"><div><h3>VE Staff</h3><p id="teacher-count"></p></div><button class="add-btn" data-add="teacher">+ Add staff member</button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Code</th><th>Activities</th><th>Max / day</th><th>Unavailable</th><th></th></tr></thead><tbody id="teachers-body"></tbody></table></div></article>
           <article class="card data-card"><div class="card-head"><div><h3>Classes</h3><p id="class-count"></p></div><button class="add-btn" data-add="class">+ Add class</button></div><div class="table-wrap"><table><thead><tr><th>Class</th><th>Section</th><th>Default location</th><th></th></tr></thead><tbody id="classes-body"></tbody></table></div></article>
           <article class="card data-card compact"><div class="card-head"><div><h3>Locations</h3><p id="room-count"></p></div><button class="add-btn" data-add="room">+ Add location</button></div><div class="tag-list" id="rooms-list"></div></article>
           <article class="card data-card compact"><div class="card-head"><div><h3>School week</h3><p>Scheduling canvas</p></div></div><div class="week-settings"><label>Working days<select id="working-days"><option value="5">Monday–Friday</option><option value="6">Monday–Saturday</option></select></label><label>Periods per day<input id="periods-day" type="number" min="4" max="10" value="7"></label></div></article>
         </div>
       </section>
 
-      <section class="view" id="requirements-view">
-        <div class="section-intro"><div><span class="section-kicker">ACTIVITY PLAN</span><h2>Activity requirements</h2><p>Each row says what must happen during a normal work week.</p></div><button class="btn primary" data-add="lesson">+ Add requirement</button></div>
-        <article class="card data-card"><div class="filter-row"><input id="lesson-search" type="search" placeholder="Search activity, staff member or class…"><span id="lesson-summary"></span></div><div class="table-wrap"><table><thead><tr><th>Class</th><th>Activity</th><th>VE Staff</th><th>Mode</th><th>Sessions / week</th><th>Location</th><th></th></tr></thead><tbody id="lessons-body"></tbody></table></div></article>
+      <section class="view" id="sessions-view">
+        <div class="section-intro"><div><span class="section-kicker">ACTIVITY PLAN</span><h2>Session Scheduling</h2><p>Each row says what must happen during a normal work week.</p></div><button class="btn primary" data-add="lesson">+ Add session</button></div>
+        <article class="card data-card"><div class="filter-row"><input id="lesson-search" type="search" placeholder="Search activity, staff member or class…"><span id="lesson-summary"></span></div><div class="table-wrap"><table><thead><tr><th>Class</th><th>Activity</th><th>VE Staff</th><th>Mode</th><th>Schedule</th><th>Sessions / week</th><th>Location</th><th></th></tr></thead><tbody id="lessons-body"></tbody></table></div></article>
       </section>
 
       <section class="view" id="timetable-view">
