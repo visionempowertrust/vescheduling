@@ -23,6 +23,7 @@
         <button class="nav-item active" data-view="dashboard"><span>⌂</span>Overview</button>
         <button class="nav-item" data-view="setup"><span>⊞</span>VE Field Setup</button>
         <button class="nav-item" data-view="sessions"><span>≡</span>Session Scheduling</button>
+        <button class="nav-item" data-view="staff"><span>♙</span>VE Staff Scheduling</button>
         <button class="nav-item" data-view="timetable"><span>▦</span>Timetable</button>
         <p class="nav-label">Tools</p>
         <button class="nav-item" data-action="validate"><span>✓</span>Check data</button>
@@ -40,6 +41,13 @@
         <button class="mobile-menu" aria-label="Toggle navigation">☰</button>
         <div><p class="eyebrow" id="page-eyebrow">Academic year 2026–27</p><h1 id="page-title">Good morning, Meera</h1></div>
         <div class="top-actions"><span class="saved-status"><i></i> Saved locally</span><button class="btn primary" data-action="generate">Generate timetable</button></div>
+        <nav class="top-menu" aria-label="Page menu">
+          <button class="top-menu-item active" data-view="dashboard">Overview</button>
+          <button class="top-menu-item" data-view="setup">VE Field Setup</button>
+          <button class="top-menu-item" data-view="sessions">Session Scheduling</button>
+          <button class="top-menu-item" data-view="staff">VE Staff Scheduling</button>
+          <button class="top-menu-item" data-view="timetable">Timetable</button>
+        </nav>
       </header>
 
       <section class="view active" id="dashboard-view">
@@ -67,6 +75,17 @@
       <section class="view" id="sessions-view">
         <div class="section-intro"><div><span class="section-kicker">ACTIVITY PLAN</span><h2>Session Scheduling</h2><p>Each row says what must happen during a normal work week.</p></div><button class="btn primary" data-add="lesson">+ Add session</button></div>
         <article class="card data-card"><div class="filter-row"><input id="lesson-search" type="search" placeholder="Search activity, staff member or class…"><span id="lesson-summary"></span></div><div class="table-wrap"><table><thead><tr><th>Class</th><th>Activity</th><th>VE Staff</th><th>Mode</th><th>Schedule</th><th>Sessions / week</th><th>Location</th><th></th></tr></thead><tbody id="lessons-body"></tbody></table></div></article>
+      </section>
+
+      <section class="view" id="staff-view">
+        <div class="section-intro"><div><span class="section-kicker">FIELD TEAM</span><h2>VE Staff Scheduling</h2><p>Register staff, filter the field team, and assign work period by period.</p></div><button class="btn primary" data-add="teacher">+ Add VE staff</button></div>
+        <div class="staff-metrics" id="staff-metrics"></div>
+        <article class="card data-card staff-directory">
+          <div class="filter-row staff-filters"><input id="staff-search" type="search" placeholder="Search by staff name…"><select id="staff-state-filter"><option value="">All states</option></select><span id="staff-filter-count"></span></div>
+          <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email ID</th><th>State</th><th>Locations</th><th>Role</th><th>Actions</th></tr></thead><tbody id="staff-directory-body"></tbody></table></div>
+        </article>
+        <div class="staff-calendar-head"><div><span class="section-kicker">MANUAL CALENDAR</span><h3>Period-by-period work plan</h3><p>Choose a staff member, then select any period to add or change their work.</p></div><select id="staff-calendar-person"></select></div>
+        <article class="card schedule-card"><div class="schedule-scroll"><table class="schedule-table staff-calendar-table" id="staff-calendar-table"></table></div></article>
       </section>
 
       <section class="view" id="timetable-view">
