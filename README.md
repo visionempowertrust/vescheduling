@@ -13,7 +13,8 @@ Open `index.html` in a modern browser. The included demo data is ready to genera
 - Activity eligibility configured for each VE staff member
 - Fixed weekday/period sessions scheduled before flexible sessions
 - VE staff directory with state/name filters and facilitator-style registration
-- Manual period-by-period work calendars for every VE staff member
+- Dated week-by-week work calendars for every VE staff member
+- Outlook-compatible `.ics` export for individual staff calendars
 - Online and offline activity scheduling
 - Automatic scheduling with class, staff, and location clash prevention
 - Class-wise and VE staff-wise timetable views

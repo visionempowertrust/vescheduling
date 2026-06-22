@@ -84,7 +84,8 @@
           <div class="filter-row staff-filters"><input id="staff-search" type="search" placeholder="Search by staff name…"><select id="staff-state-filter"><option value="">All states</option></select><span id="staff-filter-count"></span></div>
           <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email ID</th><th>State</th><th>Locations</th><th>Role</th><th>Actions</th></tr></thead><tbody id="staff-directory-body"></tbody></table></div>
         </article>
-        <div class="staff-calendar-head"><div><span class="section-kicker">MANUAL CALENDAR</span><h3>Period-by-period work plan</h3><p>Choose a staff member, then select any period to add or change their work.</p></div><select id="staff-calendar-person"></select></div>
+        <div class="staff-calendar-head"><div><span class="section-kicker">DATED CALENDAR</span><h3>Weekly staff calendar</h3><p>Each week can be different. Select a dated period to add or change work.</p></div><div class="calendar-person-actions"><select id="staff-calendar-person"></select><button class="btn secondary" data-action="export-ics">Export calendar (.ics)</button></div></div>
+        <div class="calendar-toolbar"><div><button class="icon-btn" data-calendar-nav="prev" aria-label="Previous week">←</button><button class="btn secondary" data-calendar-nav="today">Today</button><button class="icon-btn" data-calendar-nav="next" aria-label="Next week">→</button></div><strong id="calendar-week-label"></strong></div>
         <article class="card schedule-card"><div class="schedule-scroll"><table class="schedule-table staff-calendar-table" id="staff-calendar-table"></table></div></article>
       </section>
 
@@ -98,5 +99,6 @@
   <dialog id="editor-dialog"><form method="dialog" id="editor-form"><div class="dialog-head"><div><span class="section-kicker">QUICK EDIT</span><h2 id="dialog-title">Add item</h2></div><button value="cancel" class="close-btn" aria-label="Close">×</button></div><div id="dialog-fields" class="dialog-fields"></div><div class="dialog-actions"><button value="cancel" class="btn secondary">Cancel</button><button type="submit" value="default" class="btn primary">Save</button></div></form></dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
+  <script src="calendar.js"></script>
 </body>
 </html>
