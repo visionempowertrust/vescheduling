@@ -269,6 +269,83 @@
   outline: 2px solid var(--green);
 }
 
+.staff-calendar-table th,
+.staff-calendar-table td {
+  min-width: 165px;
+  vertical-align: top;
+}
+
+.calendar-day-cell {
+  height: 390px;
+  padding: 8px !important;
+  background: #fafbf9;
+}
+
+.calendar-events {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.calendar-event {
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-left: 4px solid var(--green);
+  border-radius: 7px;
+  color: var(--ink);
+  background: #dcedea;
+  text-align: left;
+  cursor: pointer;
+}
+
+.calendar-event:hover {
+  box-shadow: 0 5px 15px rgba(24,50,45,.12);
+}
+
+.calendar-event span,
+.calendar-event strong,
+.calendar-event small {
+  display: block;
+}
+
+.calendar-event span {
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.calendar-event strong {
+  margin: 3px 0;
+  font-size: 11px;
+}
+
+.calendar-event small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.calendar-event em {
+  display: block;
+  margin-top: 5px;
+  color: var(--green);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.calendar-add {
+  width: 100%;
+  margin-top: 9px;
+  padding: 9px;
+  border: 1px dashed #aebfba;
+  border-radius: 7px;
+  color: var(--green);
+  background: transparent;
+  font: 700 10px "DM Sans";
+  cursor: pointer;
+}
+
 .table-actions {
   display: flex;
   gap: 5px;
@@ -286,6 +363,11 @@
 
 #editor-dialog.staff-dialog {
   width: min(780px, calc(100% - 30px));
+}
+
+#editor-dialog.staff-dialog label:has([name="max"]),
+#editor-dialog.staff-dialog label:has([name="unavailable"]) {
+  display: none;
 }
 
 .location-picker {
