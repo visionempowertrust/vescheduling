@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A practical school timetable generator for VE staff, classes and locations.">
-  <title>VE Scheduler — School timetable planner</title>
+  <meta name="description" content="A practical calendar planner for VE field staff, schools and activities.">
+  <title>VE Scheduler — Field calendar planner</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
@@ -22,14 +22,14 @@
         <p class="nav-label">Workspace</p>
         <button class="nav-item active" data-view="dashboard"><span>⌂</span>Overview</button>
         <button class="nav-item" data-view="setup"><span>⊞</span>VE Field Setup</button>
-        <button class="nav-item" data-view="sessions"><span>≡</span>Session Scheduling</button>
         <button class="nav-item" data-view="staff"><span>♙</span>VE Staff Scheduling</button>
+        <button class="nav-item" data-view="school"><span>⌂</span>VE School Scheduling</button>
       </nav>
       <div class="sidebar-tip">
         <strong>Scheduling tip</strong>
-        <p>Add every activity needed in one week. The generator does the slotting.</p>
+        <p>Use Karnataka as the demo setup. Other states start blank until you add their schools and staff.</p>
       </div>
-      <div class="school-chip"><span>VE</span><div><strong>Vision Empower School</strong><small>2026–27 · Draft 1</small></div></div>
+      <div class="school-chip"><span>VE</span><div><strong>Vision Empower Trust</strong><small>Field calendar · Draft</small></div></div>
     </aside>
 
     <main>
@@ -37,56 +37,44 @@
         <button class="mobile-menu" aria-label="Toggle navigation">☰</button>
         <div><p class="eyebrow" id="page-eyebrow">Academic year 2026–27</p><h1 id="page-title">Good morning, Meera</h1></div>
         <div class="top-actions"><span class="saved-status"><i></i> Saved locally</span><button class="btn primary" data-view="staff">Open staff calendar</button></div>
-        <nav class="top-menu" aria-label="Page menu">
-          <button class="top-menu-item active" data-view="dashboard">Overview</button>
-          <button class="top-menu-item" data-view="setup">VE Field Setup</button>
-          <button class="top-menu-item" data-view="sessions">Session Scheduling</button>
-          <button class="top-menu-item" data-view="staff">VE Staff Scheduling</button>
-        </nav>
       </header>
 
       <section class="view active" id="dashboard-view">
-        <div class="hero-card">
-          <div><h2>Build a calendar your field team can actually use.</h2><p>Plan each week with real dates and times, then export individual staff calendars for Outlook.</p><div class="hero-actions"><button class="btn dark" data-view="staff">Open staff calendar <span>→</span></button><button class="text-btn" data-view="setup">Review VE Field Setup</button></div></div>
-          <div class="hero-visual" aria-hidden="true"><div class="mini-grid"><span></span><b>MON</b><b>TUE</b><b>WED</b><i>1</i><em class="a"></em><em class="b"></em><em></em><i>2</i><em></em><em class="c"></em><em class="a"></em><i>3</i><em class="b"></em><em></em><em class="c"></em></div><div class="float-note">No clashes <strong>✓</strong></div></div>
-        </div>
         <div class="metrics" id="metrics"></div>
         <div class="dashboard-grid">
           <article class="card readiness"><div class="card-head"><div><span class="section-kicker">SETUP PROGRESS</span><h3>Ready to schedule</h3></div><strong id="ready-percent">0%</strong></div><div class="progress"><i id="ready-bar"></i></div><div id="checklist" class="checklist"></div></article>
-          <article class="card activity"><div class="card-head"><div><span class="section-kicker">AT A GLANCE</span><h3>Weekly activity load</h3></div><button class="icon-btn" data-view="sessions" aria-label="Open sessions">→</button></div><div id="load-chart" class="load-chart"></div></article>
+          <article class="card activity"><div class="card-head"><div><span class="section-kicker">AT A GLANCE</span><h3>Current calendar load</h3><p>Events already planned for the selected staff and schools.</p></div><button class="icon-btn" data-view="staff" aria-label="Open staff scheduling">→</button></div><div id="load-chart" class="load-chart"></div></article>
         </div>
       </section>
 
       <section class="view" id="setup-view">
-        <div class="section-intro"><div><span class="section-kicker">FOUNDATION</span><h2>VE Field Setup</h2><p>Define the people and groups that can appear in the timetable.</p></div><button class="btn secondary" data-action="reset-demo">Restore demo data</button></div>
+        <div class="section-intro"><div><span class="section-kicker">FOUNDATION</span><h2>VE Field Setup</h2><p>Choose a state, then define the VE staff, classes and school locations for that state.</p></div><div class="inline-actions"><select id="setup-state-select"></select><button class="btn secondary" data-action="reset-demo">Restore Karnataka demo</button></div></div>
         <div class="setup-grid">
           <article class="card data-card"><div class="card-head"><div><h3>VE Staff</h3><p id="teacher-count"></p></div><button class="add-btn" data-add="teacher">+ Add staff member</button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Code</th><th>Activities</th><th></th></tr></thead><tbody id="teachers-body"></tbody></table></div></article>
           <article class="card data-card"><div class="card-head"><div><h3>Classes</h3><p id="class-count"></p></div><button class="add-btn" data-add="class">+ Add class</button></div><div class="table-wrap"><table><thead><tr><th>Class</th><th>Section</th><th>Default location</th><th></th></tr></thead><tbody id="classes-body"></tbody></table></div></article>
-          <article class="card data-card compact"><div class="card-head"><div><h3>Locations</h3><p id="room-count"></p></div><button class="add-btn" data-add="room">+ Add location</button></div><div class="tag-list" id="rooms-list"></div></article>
-          <article class="card data-card compact"><div class="card-head"><div><h3>Calendar week</h3><p>Days shown in staff calendars</p></div></div><div class="week-settings"><label>Working days<select id="working-days"><option value="5">Monday–Friday</option><option value="6">Monday–Saturday</option></select></label><input id="periods-day" type="hidden" value="7"></div></article>
+          <article class="card data-card compact"><div class="card-head"><div><h3>School locations</h3><p id="room-count"></p></div><button class="add-btn" data-add="room">+ Add school</button></div><div class="tag-list" id="rooms-list"></div></article>
+          <article class="card data-card compact"><div class="card-head"><div><h3>Calendar week</h3><p>Days shown in staff and school calendars</p></div></div><div class="week-settings"><label>Working days<select id="working-days"><option value="5">Monday–Friday</option><option value="6">Monday–Saturday</option></select></label><input id="periods-day" type="hidden" value="7"></div></article>
         </div>
       </section>
 
-      <section class="view" id="sessions-view">
-        <div class="section-intro"><div><span class="section-kicker">ACTIVITY PLAN</span><h2>Session Scheduling</h2><p>Each row says what must happen during a normal work week.</p></div><button class="btn primary" data-add="lesson">+ Add session</button></div>
-        <article class="card data-card"><div class="filter-row"><input id="lesson-search" type="search" placeholder="Search activity, staff member or class…"><span id="lesson-summary"></span></div><div class="table-wrap"><table><thead><tr><th>Class</th><th>Activity</th><th>VE Staff</th><th>Mode</th><th>Schedule</th><th>Sessions</th><th>Location</th><th></th></tr></thead><tbody id="lessons-body"></tbody></table></div></article>
-      </section>
-
       <section class="view" id="staff-view">
-        <div class="section-intro"><div><span class="section-kicker">FIELD TEAM</span><h2>VE Staff Scheduling</h2><p>Register staff, filter the field team, and create dated calendar events.</p></div><button class="btn primary" data-add="teacher">+ Add VE staff</button></div>
+        <div class="section-intro"><div><span class="section-kicker">FIELD TEAM</span><h2>VE Staff Scheduling</h2><p>Register staff, filter by state and name, and create dated calendar events.</p></div><button class="btn primary" data-add="teacher">+ Add VE staff</button></div>
         <div class="staff-metrics" id="staff-metrics"></div>
         <article class="card data-card staff-directory">
-          <div class="filter-row staff-filters"><input id="staff-search" type="search" placeholder="Search by staff name…"><select id="staff-state-filter"><option value="">All states</option></select><span id="staff-filter-count"></span></div>
+          <div class="filter-row staff-filters"><select id="staff-state-filter"></select><input id="staff-search" type="search" placeholder="Search by staff name…"><span id="staff-filter-count"></span></div>
           <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email ID</th><th>State</th><th>Locations</th><th>Role</th><th>Actions</th></tr></thead><tbody id="staff-directory-body"></tbody></table></div>
         </article>
         <div class="staff-calendar-head"><div><span class="section-kicker">DATED CALENDAR</span><h3>Weekly staff calendar</h3><p>Each week can be different. Select a date to add or edit an event.</p></div><div class="calendar-person-actions"><select id="staff-calendar-person"></select><button class="btn secondary" data-action="export-ics">Export calendar (.ics)</button></div></div>
         <div class="calendar-toolbar"><div><button class="icon-btn" data-calendar-nav="prev" aria-label="Previous week">←</button><button class="btn secondary" data-calendar-nav="today">Today</button><button class="icon-btn" data-calendar-nav="next" aria-label="Next week">→</button></div><strong id="calendar-week-label"></strong></div>
         <article class="card schedule-card"><div class="schedule-scroll"><table class="schedule-table staff-calendar-table" id="staff-calendar-table"></table></div></article>
+        <article class="card ai-summary-card"><div class="card-head"><div><span class="section-kicker">AI GENERATED SUMMARY</span><h3>Allocation risks</h3><p>Local summary of effort, cost and travel risks for the selected staff member.</p></div></div><div id="staff-risk-summary" class="risk-summary"></div></article>
       </section>
 
-      <section class="view" id="timetable-view">
-        <div class="section-intro"><div><span class="section-kicker">GENERATED PLAN</span><h2>Weekly timetable</h2><p id="generation-note">Generate a timetable to see the result.</p></div><div class="inline-actions"><select id="schedule-mode"><option value="class">View by class</option><option value="teacher">View by VE staff</option></select><select id="schedule-entity"></select><button class="btn primary" data-action="generate">Regenerate</button></div></div>
-        <div id="schedule-alert"></div><article class="card schedule-card"><div class="schedule-scroll"><table class="schedule-table" id="schedule-table"></table></div><div class="schedule-legend"><span class="mode-badge offline">Offline</span><span class="mode-badge online">Online</span></div></article>
+      <section class="view" id="school-view">
+        <div class="section-intro"><div><span class="section-kicker">SCHOOL VIEW</span><h2>VE School Scheduling</h2><p>Select a state and school to see all planned activities across VE staff for each day.</p></div></div>
+        <div class="calendar-toolbar school-toolbar"><div><select id="school-state-filter"></select><select id="school-location-filter"></select></div><div><button class="icon-btn" data-school-calendar-nav="prev" aria-label="Previous week">←</button><button class="btn secondary" data-school-calendar-nav="today">Today</button><button class="icon-btn" data-school-calendar-nav="next" aria-label="Next week">→</button></div><strong id="school-calendar-week-label"></strong></div>
+        <article class="card schedule-card"><div class="schedule-scroll"><table class="schedule-table staff-calendar-table" id="school-calendar-table"></table></div></article>
+        <article class="card ai-summary-card"><div class="card-head"><div><span class="section-kicker">AI GENERATED SUMMARY</span><h3>School allocation risks</h3><p>Local summary of effort, cost and delivery risks for the selected school.</p></div></div><div id="school-risk-summary" class="risk-summary"></div></article>
       </section>
     </main>
   </div>

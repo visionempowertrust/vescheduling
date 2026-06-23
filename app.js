@@ -1,56 +1,588 @@
-const DEMO={settings:{days:5,periods:7},teachers:[{id:'t1',name:'Anita Sharma',code:'AS',max:5,unavailable:'Mon-1'},{id:'t2',name:'Ravi Kumar',code:'RK',max:5,unavailable:'Fri-7'},{id:'t3',name:'Neha Iyer',code:'NI',max:4,unavailable:'Wed-1,Wed-2'},{id:'t4',name:'Joseph D’Souza',code:'JD',max:5,unavailable:''},{id:'t5',name:'Priya Nair',code:'PN',max:4,unavailable:'Tue-6,Tue-7'},{id:'t6',name:'Arun Das',code:'AD',max:5,unavailable:''}],classes:[{id:'c1',grade:'6',section:'A',room:'R-101'},{id:'c2',grade:'6',section:'B',room:'R-102'},{id:'c3',grade:'7',section:'A',room:'R-201'},{id:'c4',grade:'7',section:'B',room:'R-202'}],rooms:['R-101','R-102','R-201','R-202','Science Lab','Computer Lab','Activity Hall'],lessons:[
-{id:'l1',classId:'c1',subject:'Mathematics',teacherId:'t1',count:5,room:''},{id:'l2',classId:'c1',subject:'English',teacherId:'t2',count:5,room:''},{id:'l3',classId:'c1',subject:'Science',teacherId:'t3',count:4,room:'Science Lab'},{id:'l4',classId:'c1',subject:'Social Studies',teacherId:'t4',count:3,room:''},{id:'l5',classId:'c1',subject:'Hindi',teacherId:'t5',count:3,room:''},{id:'l6',classId:'c1',subject:'Computer Science',teacherId:'t6',count:2,room:'Computer Lab'},
-{id:'l7',classId:'c2',subject:'Mathematics',teacherId:'t1',count:5,room:''},{id:'l8',classId:'c2',subject:'English',teacherId:'t2',count:5,room:''},{id:'l9',classId:'c2',subject:'Science',teacherId:'t3',count:4,room:'Science Lab'},{id:'l10',classId:'c2',subject:'Social Studies',teacherId:'t4',count:3,room:''},{id:'l11',classId:'c2',subject:'Hindi',teacherId:'t5',count:3,room:''},{id:'l12',classId:'c2',subject:'Art',teacherId:'t6',count:2,room:'Activity Hall'},
-{id:'l13',classId:'c3',subject:'Mathematics',teacherId:'t1',count:5,room:''},{id:'l14',classId:'c3',subject:'English',teacherId:'t2',count:4,room:''},{id:'l15',classId:'c3',subject:'Science',teacherId:'t3',count:5,room:'Science Lab'},{id:'l16',classId:'c3',subject:'Social Studies',teacherId:'t4',count:4,room:''},{id:'l17',classId:'c3',subject:'Hindi',teacherId:'t5',count:3,room:''},
-{id:'l18',classId:'c4',subject:'Mathematics',teacherId:'t1',count:5,room:''},{id:'l19',classId:'c4',subject:'English',teacherId:'t2',count:4,room:''},{id:'l20',classId:'c4',subject:'Science',teacherId:'t3',count:5,room:'Science Lab'},{id:'l21',classId:'c4',subject:'Social Studies',teacherId:'t4',count:4,room:''},{id:'l22',classId:'c4',subject:'Hindi',teacherId:'t5',count:3,room:''},{id:'l23',classId:'c4',subject:'Computer Science',teacherId:'t6',count:2,room:'Computer Lab'}]};
-const ACTIVITIES=['Capacity Building','Self Preparation','Session Preparation','Report Writing','School Meetings','VE Team Meetings','VE - Teacher Preparatory Meetings','VICT Sessions','Digital Literacy Session','Science Theory','Science Practicals','Science Others','Maths','Maths Others','Tactile Preparation','Earthian','ECCE','ESL','Event Preparation','Event','Senitization','Volunteering','Travel','Other VE Work','Other School Work'];
-const LEGACY_ACTIVITY={Mathematics:'Maths',English:'ESL',Science:'Science Theory','Social Studies':'Other School Work',Hindi:'Other School Work','Computer Science':'Digital Literacy Session',Art:'Tactile Preparation'};
-const DEMO_LOCATIONS=['VNEB School','JMS School'];
-const STATES=['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Odisha','Punjab','Rajasthan','Tamil Nadu','Telangana','Uttar Pradesh','Uttarakhand','West Bengal'];
-let state=load(),schedule=[],unplaced=[],editingId=null,calendarWeekStart=startOfWeek(new Date());const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-state.teachers.forEach(t=>{const previousFullList=ACTIVITIES.filter(a=>a!=='Travel');if(!t.activities.includes('Travel')&&previousFullList.every(a=>t.activities.includes(a)))t.activities.push('Travel')});
-function applyDemoLocations(data){if(data.rooms?.includes('R-101')){data.rooms=[...DEMO_LOCATIONS];data.classes.forEach((c,i)=>c.room=DEMO_LOCATIONS[i%DEMO_LOCATIONS.length]);data.lessons.forEach(l=>l.room='')}return data}
-function load(){let data;try{data=JSON.parse(localStorage.getItem('shala-state'))||structuredClone(DEMO)}catch{data=structuredClone(DEMO)}applyDemoLocations(data);data.staffWork=(data.staffWork||[]).map(w=>{const times=periodTimes(+w.period||1),date=w.date||formatISODate(addDays(startOfWeek(new Date()),+w.day||0));return {...w,date,startTime:w.startTime||times.start,endTime:w.endTime||times.end,recurrence:w.recurrence||'none',repeatUntil:w.repeatUntil||''}});data.teachers=data.teachers.map((t,i)=>{const parts=(t.name||'').trim().split(/\s+/),firstName=t.firstName||parts.shift()||'',lastName=t.lastName||parts.join(' ');return {...t,firstName,lastName,name:`${firstName} ${lastName}`.trim(),email:t.email||`${(t.code||'staff').toLowerCase()}@visionempowertrust.org`,phone:t.phone||'',alternatePhone:t.alternatePhone||'',state:t.state||['Karnataka','Tamil Nadu','Odisha'][i%3],role:t.role||'Facilitator',qualification:t.qualification||'',specialEducator:t.specialEducator||'No',educator:t.educator||'Yes',locations:t.locations?.length?t.locations:[data.rooms[i%Math.max(data.rooms.length,1)]].filter(Boolean),activities:t.activities?.length?t.activities:[...ACTIVITIES]}});data.lessons=data.lessons.map(l=>{const times=periodTimes(+l.fixedPeriod||1),fixedDate=l.fixedDate||'',fixedStartTime=l.fixedStartTime||times.start,fixedEndTime=l.fixedEndTime||times.end;return {...l,subject:LEGACY_ACTIVITY[l.subject]||l.subject,mode:l.mode||'offline',scheduleType:l.scheduleType||'flexible',fixedDate,fixedStartTime,fixedEndTime}});return data}
-function save(){localStorage.setItem('shala-state',JSON.stringify(state));toast('Changes saved locally')}
-const className=id=>{const c=state.classes.find(x=>x.id===id);return c?`Grade ${c.grade}${c.section}`:'Unknown'};
-const teacherName=id=>state.teachers.find(x=>x.id===id)?.name||'Unknown';
-function showView(name){$$('.view').forEach(v=>v.classList.toggle('active',v.id===`${name}-view`));$$('[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===name));const titles={dashboard:['Academic year 2026–27','Good morning, Meera'],setup:['Timetable foundation','VE Field Setup'],sessions:['Weekly activity plan','Session Scheduling'],staff:['Field team calendar','VE Staff Scheduling'],timetable:['Generated plan','Weekly timetable']};$('#page-eyebrow').textContent=titles[name][0];$('#page-title').textContent=titles[name][1];$('.sidebar').classList.remove('open');if(name==='timetable')renderScheduleControls();if(name==='staff')renderStaffPage()}
-function render(){renderDashboard();renderSetup();renderLessons();renderStaffPage();$('#working-days').value=state.settings.days}
-function renderDashboard(){const total=state.lessons.reduce((n,l)=>n+Number(l.count),0);const data=[['♙',state.teachers.length,'VE Staff'],['▣',state.classes.length,'Classes'],['▦',total,'Sessions / week'],['⌂',state.rooms.length,'Locations']];$('#metrics').innerHTML=data.map(x=>`<div class="metric"><div class="metric-top"><span class="metric-icon">${x[0]}</span></div><strong>${x[1]}</strong><small>${x[2]}</small></div>`).join('');const checks=[['VE staff added',!!state.teachers.length],['Classes created',!!state.classes.length],['Locations available',!!state.rooms.length],['Activities assigned',!!state.lessons.length]];const done=checks.filter(x=>x[1]).length,pct=Math.round(done/checks.length*100);$('#ready-percent').textContent=pct+'%';$('#ready-bar').style.width=pct+'%';$('#checklist').innerHTML=checks.map(x=>`<div class="check-item"><i>${x[1]?'✓':'·'}</i>${x[0]}</div>`).join('');const loads=state.teachers.map(t=>({code:t.code,n:state.lessons.filter(l=>l.teacherId===t.id).reduce((a,l)=>a+Number(l.count),0)})),max=Math.max(...loads.map(x=>x.n),1);$('#load-chart').innerHTML=loads.map(x=>`<div class="bar-col"><i style="height:${x.n/max*100}%" title="${x.n} sessions"></i><b>${x.code}</b></div>`).join('')}
-function renderSetup(){$('#teacher-count').textContent=`${state.teachers.length} teaching staff`;$('#class-count').textContent=`${state.classes.length} class groups`;$('#room-count').textContent=`${state.rooms.length} schools`;$('#teachers-body').innerHTML=state.teachers.map(t=>`<tr><td><strong>${esc(t.name)}</strong></td><td>${esc(t.code)}</td><td class="staff-activities" title="${esc((t.activities||[]).join(', '))}">${(t.activities||[]).length} selected</td><td><button class="row-action" data-delete="teacher" data-id="${t.id}">×</button></td></tr>`).join('');$('#classes-body').innerHTML=state.classes.map(c=>`<tr><td><strong>Grade ${esc(c.grade)}</strong></td><td>${esc(c.section)}</td><td>${esc(c.room)}</td><td><button class="row-action" data-delete="class" data-id="${c.id}">×</button></td></tr>`).join('');$('#rooms-list').innerHTML=state.rooms.map((r,i)=>`<span class="tag">${esc(r)} <button class="row-action" data-delete="room" data-id="${i}">×</button></span>`).join('')}
-function renderLessons(filter=''){const q=filter.toLowerCase(),ls=state.lessons.filter(l=>[l.subject,className(l.classId),teacherName(l.teacherId),l.mode||'offline'].some(x=>x.toLowerCase().includes(q)));$('#lesson-summary').textContent=`${ls.length} scheduled activities · ${ls.reduce((n,l)=>n+Number(l.count),0)} sessions`;$('#lessons-body').innerHTML=ls.map(l=>{const fixed=l.scheduleType==='fixed',scheduleLabel=fixed&&l.fixedDate?`${formatShortDate(new Date(`${l.fixedDate}T00:00:00`))} · ${l.fixedStartTime}–${l.fixedEndTime}`:'Flexible';return `<tr><td><strong>${className(l.classId)}</strong></td><td>${esc(l.subject)}</td><td>${esc(teacherName(l.teacherId))}</td><td><span class="mode-badge ${l.mode||'offline'}">${esc(l.mode||'offline')}</span></td><td><span class="mode-badge ${fixed?'online':'offline'}">${esc(scheduleLabel)}</span></td><td>${l.count}</td><td class="muted">${l.mode==='online'?'Online':esc(l.room||state.classes.find(c=>c.id===l.classId)?.room||'Select')}</td><td><button class="row-action" data-delete="lesson" data-id="${l.id}">×</button></td></tr>`}).join('')}
-function renderStaffPage(){if(!$('#staff-metrics'))return;const q=$('#staff-search').value.toLowerCase(),selectedState=$('#staff-state-filter').value,states=[...new Set(state.teachers.map(t=>t.state).filter(Boolean))].sort(),locations=[...new Set(state.teachers.flatMap(t=>t.locations||[]))];$('#staff-metrics').innerHTML=[[state.teachers.length,'Registered staff'],[states.length,'States represented'],[locations.length,'Field locations'],[state.staffWork.length,'Calendar events']].map(x=>`<div class="staff-metric"><strong>${x[0]}</strong><span>${x[1]}</span></div>`).join('');$('#staff-state-filter').innerHTML='<option value="">All states</option>'+states.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');$('#staff-state-filter').value=states.includes(selectedState)?selectedState:'';const filtered=state.teachers.filter(t=>(!q||t.name.toLowerCase().includes(q))&&(!selectedState||t.state===selectedState));$('#staff-filter-count').textContent=`${filtered.length} of ${state.teachers.length} staff`;$('#staff-directory-body').innerHTML=filtered.map(t=>`<tr><td><strong>${esc(t.name)}</strong><span class="muted">${esc(t.phone||'')}</span></td><td>${esc(t.email)}</td><td>${esc(t.state)}</td><td>${esc((t.locations||[]).join(', ')||'—')}</td><td>${esc(t.role||'—')}</td><td><div class="table-actions"><button class="mini-action" data-schedule-staff="${t.id}">Calendar</button><button class="mini-action" data-edit="teacher" data-id="${t.id}">Edit</button><button class="row-action" data-delete="teacher" data-id="${t.id}">×</button></div></td></tr>`).join('');const person=$('#staff-calendar-person'),old=person.value;person.innerHTML=state.teachers.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');if(state.teachers.some(t=>t.id===old))person.value=old;renderStaffCalendar()}
-function renderStaffCalendar(){const table=$('#staff-calendar-table');if(!table)return;const teacherId=$('#staff-calendar-person').value,dayLabels=dayNames(),dates=dayLabels.map((_,i)=>addDays(calendarWeekStart,i)),today=formatISODate(new Date()),end=dates[dates.length-1];$('#calendar-week-label').textContent=end?`${formatDisplayDate(dates[0])} – ${formatDisplayDate(end)}`:'';if(!teacherId){table.innerHTML='<tbody><tr><td class="muted" style="padding:50px">Add a VE staff member to begin scheduling.</td></tr></tbody>';return}let html='<thead><tr>'+dates.map((date,i)=>{const iso=formatISODate(date);return `<th class="${iso===today?'calendar-today':''}">${dayLabels[i]}<span class="calendar-date">${formatShortDate(date)}</span></th>`}).join('')+'</tr></thead><tbody><tr>';for(const date of dates){const iso=formatISODate(date),events=state.staffWork.filter(w=>w.teacherId===teacherId&&eventOccursOn(w,iso)).sort((a,b)=>a.startTime.localeCompare(b.startTime));html+=`<td class="calendar-day-cell"><div class="calendar-events">${events.map(work=>`<button class="calendar-event" data-work-id="${work.id}" data-staff-slot="${teacherId}|${iso}"><span>${esc(work.startTime)}–${esc(work.endTime)}${work.recurrence!=='none'?' ↻':''}</span><strong>${esc(work.activity)}</strong><small>${esc(work.mode==='online'?'Online':work.location||'Offline')}</small><em>Edit</em></button>`).join('')}</div><button class="calendar-add" data-staff-slot="${teacherId}|${iso}">+ Add event</button></td>`}table.innerHTML=html+'</tr></tbody>'}
-function generate(){const issues=validate(false);if(issues.length){toast(issues[0]);showView('sessions');return}schedule=[];unplaced=[];const days=dayNames(),periods=+state.settings.periods,fixed=[],flexible=[];state.lessons.forEach(l=>{for(let i=0;i<+l.count;i++)(l.scheduleType==='fixed'?fixed:flexible).push({...l,instance:i})});const occupied={};for(const item of fixed){const d=+item.fixedDay,p=+item.fixedPeriod,score=slotScore(item,d,p,occupied,days);if(d<0||d>=days.length||p<1||p>periods||score===null){unplaced.push(item);continue}const entry={...item,day:d,period:p};schedule.push(entry);mark(occupied,entry)}flexible.sort((a,b)=>constraintScore(b)-constraintScore(a));for(const item of flexible){const slots=[];for(let d=0;d<days.length;d++)for(let p=1;p<=periods;p++){const score=slotScore(item,d,p,occupied,days);if(score!==null)slots.push({d,p,score:score+Math.random()*.15})}slots.sort((a,b)=>a.score-b.score);if(!slots.length){unplaced.push(item);continue}const s=slots[0],entry={...item,day:s.d,period:s.p};schedule.push(entry);mark(occupied,entry)}const total=fixed.length+flexible.length;renderScheduleControls();showView('timetable');$('#generation-note').textContent=`Generated just now · ${schedule.length} of ${total} activities placed`;$('#schedule-alert').innerHTML=unplaced.length?`<div class="alert">${unplaced.length} activit${unplaced.length>1?'ies':'y'} could not be placed. Check fixed-session clashes, loads, and staff availability.</div>`:`<div class="alert success">All ${schedule.length} activities placed. Fixed sessions were reserved before flexible sessions.</div>`;renderSchedule();toast(unplaced.length?'Timetable generated with warnings':'Conflict-free timetable generated')}
-function constraintScore(l){const t=state.teachers.find(x=>x.id===l.teacherId);return (l.mode!=='online'&&l.room?5:0)+(t?.unavailable?3:0)+Number(l.count)}
-function slotScore(item,d,p,o,days){const day=days[d]?.slice(0,3),key=`${d}-${p}`,t=state.teachers.find(x=>x.id===item.teacherId),c=state.classes.find(x=>x.id===item.classId);if(!t||!c||!(t.activities||[]).includes(item.subject))return null;const location=item.mode==='online'?null:item.room||c.room;if(t.unavailable.split(',').map(x=>x.trim()).includes(`${day}-${p}`))return null;if(o[`t:${item.teacherId}:${key}`]||o[`c:${item.classId}:${key}`]||(location&&o[`r:${location}:${key}`]))return null;const daily=schedule.filter(x=>x.teacherId===item.teacherId&&x.day===d).length;if(daily>=+t.max)return null;const subjectToday=schedule.filter(x=>x.classId===item.classId&&x.subject===item.subject&&x.day===d).length;const classDaily=schedule.filter(x=>x.classId===item.classId&&x.day===d).length;return subjectToday*12+classDaily*1.3+daily*.8+(p===1||p===+state.settings.periods?1:0)}
-function mark(o,e){const k=`${e.day}-${e.period}`,c=state.classes.find(x=>x.id===e.classId),r=e.mode==='online'?null:e.room||c.room;o[`t:${e.teacherId}:${k}`]=o[`c:${e.classId}:${k}`]=true;if(r)o[`r:${r}:${k}`]=true}
-function renderScheduleControls(){const mode=$('#schedule-mode').value||'class',items=mode==='class'?state.classes:state.teachers,old=$('#schedule-entity').value;$('#schedule-entity').innerHTML=items.map(x=>`<option value="${x.id}">${mode==='class'?className(x.id):esc(x.name)}</option>`).join('');if(items.some(x=>x.id===old))$('#schedule-entity').value=old;renderSchedule()}
-function renderSchedule(){const mode=$('#schedule-mode').value,entity=$('#schedule-entity').value,days=dayNames(),periods=+state.settings.periods;if(!schedule.length){$('#schedule-table').innerHTML=`<tbody><tr><td class="muted" style="padding:70px">No timetable generated yet.</td></tr></tbody>`;return}let html='<thead><tr><th>Period</th>'+days.map(d=>`<th>${d}</th>`).join('')+'</tr></thead><tbody>';for(let p=1;p<=periods;p++){html+=`<tr><th>Period ${p}</th>`;for(let d=0;d<days.length;d++){const s=schedule.find(x=>x.day===d&&x.period===p&&(mode==='class'?x.classId===entity:x.teacherId===entity));html+=`<td>${s?slotHtml(s,mode):'<div class="slot empty">—</div>'}</td>`}html+='</tr>'}$('#schedule-table').innerHTML=html+'</tbody>'}
-function slotHtml(s,mode){const practical=/science|computer|art|physical/i.test(s.subject),language=/english|hindi|language/i.test(s.subject),type=practical?'practical':language?'language':'core',delivery=s.mode==='online'?'Online':s.room||state.classes.find(c=>c.id===s.classId)?.room||'Select';return `<div class="slot ${type}"><strong>${esc(s.subject)}</strong><small>${mode==='class'?esc(teacherName(s.teacherId)):className(s.classId)} · ${esc(delivery)}</small></div>`}
-function validate(notify=true){const issues=[];if(!state.teachers.length)issues.push('Add at least one VE staff member.');if(!state.classes.length)issues.push('Add at least one class.');if(!state.lessons.length)issues.push('Add at least one session.');state.lessons.forEach(l=>{const t=state.teachers.find(x=>x.id===l.teacherId);if(!t||!state.classes.some(c=>c.id===l.classId))issues.push(`Fix the assignment for ${l.subject}.`);else if(!(t.activities||[]).includes(l.subject))issues.push(`${t.name} is not configured for ${l.subject}.`);if(l.scheduleType==='fixed'&&(!l.fixedDate||!l.fixedStartTime||!l.fixedEndTime))issues.push(`Choose a fixed date and time for ${l.subject}.`)});if(notify)toast(issues.length?issues[0]:'Your setup is complete and consistent');return issues}
-function openEditor(type,id='',slot=''){const fields=$('#dialog-fields'),dialog=$('#editor-dialog'),form=$('#editor-form'),record=type==='teacher'?state.teachers.find(t=>t.id===id):null;editingId=id||null;form.dataset.type=type;form.dataset.slot=slot;dialog.classList.toggle('staff-dialog',type==='teacher');const titles={teacher:record?'Edit VE staff':'Add VE staff member',class:'Add class',room:'Add location',lesson:'Add session',work:'Assign period work'};$('#dialog-title').textContent=titles[type];if(type==='teacher'){fields.innerHTML=selectField('state','State',STATES)+field('firstName','First name','text',record?.firstName||'')+field('lastName','Last name','text',record?.lastName||'')+field('email','Email ID','email',record?.email||'')+field('phone','Phone number','tel',record?.phone||'')+field('alternatePhone','Alternate phone','tel',record?.alternatePhone||'')+field('code','Short code','text',record?.code||'')+field('role','Role / designation','text',record?.role||'Facilitator')+field('qualification','Qualification','text',record?.qualification||'')+selectField('specialEducator','Special Educator?',['No','Yes'])+selectField('educator','Educator?',['No','Yes'])+field('max','Max periods / day','number',record?.max||'5')+field('unavailable','Unavailable slots','text',record?.unavailable||'','e.g. Mon-1,Wed-4','full')+locationChecklist(record?.locations||[])+activityChecklist(record?.activities||[])}if(type==='class')fields.innerHTML=field('grade','Grade')+field('section','Section')+selectField('room','Default location',state.rooms);if(type==='room')fields.innerHTML=field('name','Location name','text','','e.g. VNEB School','full');if(type==='lesson')fields.innerHTML=selectField('classId','Class',state.classes.map(c=>({value:c.id,label:className(c.id)})))+selectField('subject','Activity',ACTIVITIES)+selectField('teacherId','Eligible VE Staff',[])+selectField('mode','Delivery mode',[{value:'offline',label:'Offline'},{value:'online',label:'Online'}])+selectField('scheduleType','Scheduling',[{value:'flexible',label:'Flexible — distribute automatically'},{value:'fixed',label:'Fixed day and period'}])+field('count','Sessions per week','number','4')+selectField('room','Location (offline only)',['',...state.rooms])+`<div class="fixed-fields is-hidden">${selectField('fixedDay','Fixed day',dayNames().map((d,i)=>({value:String(i),label:d})))}${field('fixedPeriod','Fixed period','number','1')}</div>`;if(type==='work'){const [teacherId,day,period]=slot.split('|'),work=state.staffWork.find(w=>w.id===id),teacher=state.teachers.find(t=>t.id===teacherId),activities=teacher?.activities||ACTIVITIES;fields.innerHTML=`<div class="full muted">${esc(teacher?.name||'VE Staff')} · ${esc(dayNames()[+day]||'')} · Period ${esc(period)}</div>`+selectField('activity','Activity',activities)+selectField('mode','Delivery mode',[{value:'offline',label:'Offline'},{value:'online',label:'Online'}])+selectField('location','Location',['',...(teacher?.locations||state.rooms)])+field('notes','Notes','text',work?.notes||'','','full')+(work?`<button type="button" class="btn secondary full" data-delete-work="${work.id}">Clear this period</button>`:'');if(work){setTimeout(()=>{setEditorValue('activity',work.activity);setEditorValue('mode',work.mode);setEditorValue('location',work.location)},0)}}dialog.showModal();if(type==='teacher'){setEditorValue('state',record?.state||STATES[0]);setEditorValue('specialEducator',record?.specialEducator||'No');setEditorValue('educator',record?.educator||'Yes')}bindDialogControls(type)}
-function activityChecklist(selected=[]){return `<div class="activity-picker"><span>Activities this staff member can perform</span><div class="checkbox-grid">${ACTIVITIES.map(a=>`<label><input type="checkbox" name="activities" value="${esc(a)}" ${selected.includes(a)?'checked':''}> ${esc(a)}</label>`).join('')}</div></div>`}
-function locationChecklist(selected=[]){return `<div class="activity-picker location-picker"><span>Locations this staff member visits</span><div class="checkbox-grid">${state.rooms.map(r=>`<label><input type="checkbox" name="locations" value="${esc(r)}" ${selected.includes(r)?'checked':''}> ${esc(r)}</label>`).join('')}</div></div>`}
-function setEditorValue(name,value){const el=$(`#dialog-fields [name="${name}"]`);if(el)el.value=value??''}
-function openCalendarWorkEditor(id,slot){const [teacherId,date]=slot.split('|'),work=state.staffWork.find(w=>w.id===id),teacher=state.teachers.find(t=>t.id===teacherId),dialog=$('#editor-dialog'),form=$('#editor-form');editingId=id||null;form.dataset.type='calendarWork';form.dataset.slot=slot;dialog.classList.remove('staff-dialog');$('#dialog-title').textContent=work?'Edit calendar event':'Add calendar event';$('#dialog-fields').innerHTML=`<div class="full muted">${esc(teacher?.name||'VE Staff')} · ${esc(formatDisplayDate(new Date(`${date}T00:00:00`)))}</div>`+selectField('activity','Activity',teacher?.activities||ACTIVITIES)+field('startTime','Start time','time',work?.startTime||'09:00')+field('endTime','End time','time',work?.endTime||'10:00')+selectField('mode','Delivery mode',[{value:'offline',label:'Offline'},{value:'online',label:'Online'}])+selectField('location','Location',['',...(teacher?.locations||state.rooms)])+selectField('recurrence','Repeat',[{value:'none',label:'Does not repeat'},{value:'daily',label:'Every day'},{value:'weekdays',label:'Every weekday'},{value:'weekly',label:'Every week'},{value:'monthly',label:'Every month'}])+field('repeatUntil','Repeat until','date',work?.repeatUntil||'')+field('notes','Notes','text',work?.notes||'','','full')+(work?`<button type="button" class="btn secondary full" data-delete-work="${work.id}">Delete recurring series</button>`:'');dialog.showModal();if(work){setEditorValue('activity',work.activity);setEditorValue('mode',work.mode);setEditorValue('location',work.location);setEditorValue('recurrence',work.recurrence||'none')}}
-function openDatedSessionEditor(){const fields=$('#dialog-fields'),dialog=$('#editor-dialog'),form=$('#editor-form');editingId=null;form.dataset.type='datedSession';dialog.classList.remove('staff-dialog');$('#dialog-title').textContent='Add session';fields.innerHTML=selectField('classId','Class',state.classes.map(c=>({value:c.id,label:className(c.id)})))+selectField('subject','Activity',ACTIVITIES)+selectField('teacherId','Eligible VE Staff',[])+selectField('mode','Delivery mode',[{value:'offline',label:'Offline'},{value:'online',label:'Online'}])+selectField('scheduleType','Scheduling',[{value:'flexible',label:'Flexible — schedule later'},{value:'fixed',label:'Fixed date and time'}])+field('count','Sessions','number','1')+selectField('room','Location (offline only)',['',...state.rooms])+`<div class="fixed-fields is-hidden">${field('fixedDate','Fixed date','date','')}${field('fixedStartTime','Start time','time','09:00')}${field('fixedEndTime','End time','time','10:00')}</div>`;dialog.showModal();bindDialogControls('lesson')}
-function bindDialogControls(type){if(type!=='lesson')return;const activity=$('#dialog-fields select[name="subject"]'),staff=$('#dialog-fields select[name="teacherId"]'),kind=$('#dialog-fields select[name="scheduleType"]'),fixed=$('#dialog-fields .fixed-fields'),count=$('#dialog-fields input[name="count"]');const syncStaff=()=>{const eligible=state.teachers.filter(t=>(t.activities||[]).includes(activity.value));staff.innerHTML=eligible.length?eligible.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join(''):'<option value="">No eligible staff configured</option>'};const syncFixed=()=>{const isFixed=kind.value==='fixed';fixed.classList.toggle('is-hidden',!isFixed);if(isFixed){count.value='1';count.setAttribute('readonly','')}else count.removeAttribute('readonly')};activity.addEventListener('change',syncStaff);kind.addEventListener('change',syncFixed);syncStaff();syncFixed()}
-function field(name,label,type='text',value='',placeholder='',cls=''){const optional=['unavailable','alternatePhone','qualification','notes','repeatUntil','fixedDate'].includes(name);return `<label class="${cls}">${label}<input name="${name}" type="${type}" value="${esc(value)}" placeholder="${placeholder}" ${type==='number'?'min="1" max="10"':''} ${optional?'':'required'}></label>`}
-function selectField(name,label,items){return `<label>${label}<select name="${name}">${items.map(x=>{const v=typeof x==='string'?x:x.value,l=typeof x==='string'?(x||'Select'):x.label;return `<option value="${esc(v)}">${esc(l)}</option>`}).join('')}</select></label>`}
-function submitEditor(e){e.preventDefault();const formData=new FormData(e.currentTarget),type=e.currentTarget.dataset.type,d=Object.fromEntries(formData);if(type==='teacher'){const activities=formData.getAll('activities'),locations=formData.getAll('locations');if(!activities.length){toast('Select at least one activity for this staff member');return}if(!locations.length){toast('Select at least one location for this staff member');return}const existing=state.teachers.find(t=>t.id===editingId),staff={...(existing||{}),id:existing?.id||uid(),firstName:d.firstName,lastName:d.lastName,name:`${d.firstName} ${d.lastName}`.trim(),email:d.email,phone:d.phone,alternatePhone:d.alternatePhone,code:d.code.toUpperCase(),state:d.state,role:d.role,qualification:d.qualification,specialEducator:d.specialEducator,educator:d.educator,max:+d.max,unavailable:d.unavailable,locations,activities};if(existing)Object.assign(existing,staff);else state.teachers.push(staff)}if(type==='class')state.classes.push({id:uid(),grade:d.grade,section:d.section.toUpperCase(),room:d.room});if(type==='room')state.rooms.push(d.name);if(type==='lesson'){if(!d.teacherId){toast('No VE staff member is configured for this activity');return}const fixed=d.scheduleType==='fixed';state.lessons.push({id:uid(),classId:d.classId,subject:d.subject,teacherId:d.teacherId,mode:d.mode||'offline',scheduleType:fixed?'fixed':'flexible',fixedDay:fixed?+d.fixedDay:'',fixedPeriod:fixed?+d.fixedPeriod:'',count:fixed?1:+d.count,room:d.mode==='online'?'':d.room})}if(type==='work'){const [teacherId,day,period]=e.currentTarget.dataset.slot.split('|'),existing=state.staffWork.find(w=>w.id===editingId),work={id:existing?.id||uid(),teacherId,day:+day,period:+period,activity:d.activity,mode:d.mode,location:d.mode==='online'?'':d.location,notes:d.notes||''};if(existing)Object.assign(existing,work);else state.staffWork.push(work)}editingId=null;save();render();$('#editor-dialog').close()}
-function submitEditorCalendarAware(e){const type=e.currentTarget.dataset.type;if(type==='datedSession'){e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget));if(!data.teacherId){toast('No VE staff member is configured for this activity');return}const fixed=data.scheduleType==='fixed';if(fixed&&data.fixedEndTime<=data.fixedStartTime){toast('End time must be after start time');return}state.lessons.push({id:uid(),classId:data.classId,subject:data.subject,teacherId:data.teacherId,mode:data.mode||'offline',scheduleType:fixed?'fixed':'flexible',fixedDate:fixed?data.fixedDate:'',fixedStartTime:fixed?data.fixedStartTime:'',fixedEndTime:fixed?data.fixedEndTime:'',count:+data.count,room:data.mode==='online'?'':data.room});save();render();$('#editor-dialog').close();return}if(type!=='calendarWork'){submitEditor(e);return}e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget)),[teacherId,date]=e.currentTarget.dataset.slot.split('|');if(data.endTime<=data.startTime){toast('End time must be after start time');return}const existing=state.staffWork.find(w=>w.id===editingId),work={id:existing?.id||uid(),teacherId,date,activity:data.activity,startTime:data.startTime,endTime:data.endTime,mode:data.mode,location:data.mode==='online'?'':data.location,recurrence:data.recurrence||'none',repeatUntil:data.recurrence==='none'?'':data.repeatUntil,notes:data.notes||''};if(existing)Object.assign(existing,work);else state.staffWork.push(work);editingId=null;save();render();$('#editor-dialog').close()}
-function remove(type,id){if(type==='teacher'){state.teachers=state.teachers.filter(x=>x.id!==id);state.lessons=state.lessons.filter(x=>x.teacherId!==id);state.staffWork=state.staffWork.filter(x=>x.teacherId!==id)}if(type==='class'){state.classes=state.classes.filter(x=>x.id!==id);state.lessons=state.lessons.filter(x=>x.classId!==id)}if(type==='lesson')state.lessons=state.lessons.filter(x=>x.id!==id);if(type==='room')state.rooms.splice(+id,1);schedule=[];save();render()}
-function startOfWeek(value){const date=new Date(value),offset=(date.getDay()+6)%7;date.setHours(0,0,0,0);date.setDate(date.getDate()-offset);return date}
-function addDays(value,count){const date=new Date(value);date.setDate(date.getDate()+count);return date}
-function formatISODate(value){const date=new Date(value),pad=n=>String(n).padStart(2,'0');return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`}
-function formatShortDate(value){return new Date(value).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
-function formatDisplayDate(value){return new Date(value).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
-function periodTimes(period){const startMinutes=9*60+(period-1)*60,pad=n=>String(n).padStart(2,'0'),fmt=m=>`${pad(Math.floor(m/60))}:${pad(m%60)}`;return {start:fmt(startMinutes),end:fmt(startMinutes+50)}}
-function eventOccursOn(event,date){if(!event.date||date<event.date)return false;if(event.repeatUntil&&date>event.repeatUntil)return false;if(!event.recurrence||event.recurrence==='none')return date===event.date;const start=new Date(`${event.date}T00:00:00`),target=new Date(`${date}T00:00:00`),days=Math.round((target-start)/86400000);if(event.recurrence==='daily')return true;if(event.recurrence==='weekdays')return target.getDay()>=1&&target.getDay()<=5;if(event.recurrence==='weekly')return days%7===0;if(event.recurrence==='monthly')return target.getDate()===start.getDate();return false}
-function icsDate(date,time){return new Date(`${date}T${time}:00+05:30`).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z')}
-function icsText(value=''){return String(value).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;')}
-function exportStaffCalendar(){const teacherId=$('#staff-calendar-person').value,teacher=state.teachers.find(t=>t.id===teacherId),events=state.staffWork.filter(w=>w.teacherId===teacherId&&w.date).sort((a,b)=>`${a.date}${a.startTime}`.localeCompare(`${b.date}${b.startTime}`));if(!teacher){toast('Select a VE staff member first');return}if(!events.length){toast(`No dated events to export for ${teacher.name}`);return}const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z'),lines=['BEGIN:VCALENDAR','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:PUBLISH','PRODID:-//Vision Empower Trust//VE Scheduler//EN',`X-WR-CALNAME:${icsText(`VE Scheduler - ${teacher.name}`)}`];events.forEach(event=>{lines.push('BEGIN:VEVENT',`UID:${event.id}@vescheduler.visionempowertrust.org`,`DTSTAMP:${stamp}`,`DTSTART:${icsDate(event.date,event.startTime)}`,`DTEND:${icsDate(event.date,event.endTime)}`,`SUMMARY:${icsText(event.activity)}`,`LOCATION:${icsText(event.mode==='online'?'Online':event.location||'')}`,`DESCRIPTION:${icsText(event.notes||`Scheduled for ${teacher.name}`)}`,'END:VEVENT')});lines.push('END:VCALENDAR');const blob=new Blob([lines.join('\r\n')],{type:'text/calendar;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`VE-Scheduler-${teacher.name.replace(/[^a-z0-9]+/gi,'-')}.ics`;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);toast(`Calendar exported for ${teacher.name}`)}
-function dayNames(){return ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].slice(0,+state.settings.days)}function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}function esc(v=''){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200)}
-document.addEventListener('click',e=>{const v=e.target.closest('[data-view]'),a=e.target.closest('[data-action]'),add=e.target.closest('[data-add]'),edit=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]'),staff=e.target.closest('[data-schedule-staff]'),slot=e.target.closest('[data-staff-slot]'),deleteWork=e.target.closest('[data-delete-work]');if(v)showView(v.dataset.view);if(add)openEditor(add.dataset.add);if(edit)openEditor(edit.dataset.edit,edit.dataset.id);if(del)remove(del.dataset.delete,del.dataset.id);if(staff){showView('staff');$('#staff-calendar-person').value=staff.dataset.scheduleStaff;renderStaffCalendar();$('#staff-calendar-table').scrollIntoView({behavior:'smooth',block:'center'})}if(slot)openEditor('work',slot.dataset.workId||'',slot.dataset.staffSlot);if(deleteWork){state.staffWork=state.staffWork.filter(w=>w.id!==deleteWork.dataset.deleteWork);save();render();$('#editor-dialog').close()}if(a){if(a.dataset.action==='generate')generate();if(a.dataset.action==='validate')validate();if(a.dataset.action==='print'){showView('timetable');setTimeout(print,100)}if(a.dataset.action==='reset-demo'){state=structuredClone(DEMO);applyDemoLocations(state);state.staffWork=[];state.teachers=state.teachers.map((t,i)=>({...t,firstName:t.name.split(' ')[0],lastName:t.name.split(' ').slice(1).join(' '),email:`${t.code.toLowerCase()}@visionempowertrust.org`,phone:'',alternatePhone:'',state:['Karnataka','Tamil Nadu','Odisha'][i%3],role:'Facilitator',qualification:'',specialEducator:'No',educator:'Yes',locations:[state.rooms[i%state.rooms.length]],activities:[...ACTIVITIES]}));state.lessons=state.lessons.map(l=>({...l,subject:LEGACY_ACTIVITY[l.subject]||l.subject,mode:'offline',scheduleType:'flexible',fixedDay:'',fixedPeriod:''}));schedule=[];save();render()}}});
-$('#editor-form').addEventListener('submit',submitEditor);$('#lesson-search').addEventListener('input',e=>renderLessons(e.target.value));$('#staff-search').addEventListener('input',renderStaffPage);$('#staff-state-filter').addEventListener('change',renderStaffPage);$('#staff-calendar-person').addEventListener('change',renderStaffCalendar);$('#working-days').addEventListener('change',e=>{state.settings.days=+e.target.value;schedule=[];save();renderStaffCalendar()});$('#periods-day').addEventListener('change',e=>{state.settings.periods=+e.target.value;schedule=[];save();renderStaffCalendar()});$('#schedule-mode').addEventListener('change',renderScheduleControls);$('#schedule-entity').addEventListener('change',renderSchedule);$('.mobile-menu').addEventListener('click',()=>$('.sidebar').classList.toggle('open'));render();
+const STORAGE_KEY = 'shala-state';
+const SCHEMA_VERSION = 4;
+const DEFAULT_STATE = 'Karnataka';
+const STATES = ['Karnataka', 'Tamil Nadu', 'Odisha', 'Andhra Pradesh', 'Telangana', 'Maharashtra', 'Kerala'];
+const ACTIVITIES = ['Capacity Building','Self Preparation','Session Preparation','Report Writing','School Meetings','VE Team Meetings','VE - Teacher Preparatory Meetings','VICT Sessions','Digital Literacy Session','Science Theory','Science Practicals','Science Others','Maths','Maths Others','Tactile Preparation','Earthian','ECCE','ESL','Event Preparation','Event','Senitization','Volunteering','Travel','Other VE Work','Other School Work'];
+const LEGACY_ACTIVITY = {Mathematics:'Maths',English:'ESL',Science:'Science Theory','Social Studies':'Other School Work',Hindi:'Other School Work',Art:'Other School Work'};
+const DEMO_LOCATIONS = ['VNEB School', 'JMS School'];
+const DEMO = {
+  schemaVersion: SCHEMA_VERSION,
+  settings: {days: 6},
+  selectedSetupState: DEFAULT_STATE,
+  selectedStaffState: DEFAULT_STATE,
+  selectedSchoolState: DEFAULT_STATE,
+  selectedSchoolLocation: 'VNEB School',
+  teachers: [
+    {id:'t1',firstName:'Anita',lastName:'Sharma',name:'Anita Sharma',email:'as@visionempowertrust.org',phone:'',alternatePhone:'',code:'AS',state:DEFAULT_STATE,role:'Facilitator',qualification:'',specialEducator:'No',educator:'Yes',locations:['VNEB School'],activities:['Digital Literacy Session','Science Theory','Science Practicals','Travel','Report Writing','School Meetings']},
+    {id:'t2',firstName:'Ravi',lastName:'Kumar',name:'Ravi Kumar',email:'rk@visionempowertrust.org',phone:'',alternatePhone:'',code:'RK',state:DEFAULT_STATE,role:'Coordinator',qualification:'',specialEducator:'No',educator:'Yes',locations:['VNEB School','JMS School'],activities:['Capacity Building','VE Team Meetings','Travel','Report Writing','Other VE Work']},
+    {id:'t3',firstName:'Neha',lastName:'Iyer',name:'Neha Iyer',email:'ni@visionempowertrust.org',phone:'',alternatePhone:'',code:'NI',state:DEFAULT_STATE,role:'Facilitator',qualification:'',specialEducator:'Yes',educator:'Yes',locations:['JMS School'],activities:['Maths','Maths Others','Tactile Preparation','Travel','School Meetings']}
+  ],
+  classes: [
+    {id:'c1',grade:'6',section:'A',room:'VNEB School',state:DEFAULT_STATE},
+    {id:'c2',grade:'7',section:'A',room:'JMS School',state:DEFAULT_STATE}
+  ],
+  rooms: DEMO_LOCATIONS.map((name, index) => ({id:`r${index + 1}`, name, state:DEFAULT_STATE})),
+  staffWork: [
+    {id:'w1',teacherId:'t1',date:formatISODate(new Date()),startTime:'10:00',endTime:'12:00',activity:'Digital Literacy Session',mode:'offline',location:'VNEB School',recurrence:'weekly',repeatUntil:'',notes:'Demo recurring school session'},
+    {id:'w2',teacherId:'t2',date:formatISODate(new Date()),startTime:'13:00',endTime:'14:00',activity:'Travel',mode:'offline',location:'JMS School',recurrence:'none',repeatUntil:'',notes:'Travel buffer'},
+    {id:'w3',teacherId:'t3',date:formatISODate(addDays(new Date(), 1)),startTime:'10:00',endTime:'11:30',activity:'Maths',mode:'offline',location:'JMS School',recurrence:'weekly',repeatUntil:'',notes:''}
+  ]
+};
+
+let state = load();
+let editingId = null;
+let calendarWeekStart = startOfWeek(new Date());
+let schoolCalendarWeekStart = startOfWeek(new Date());
+const $ = selector => document.querySelector(selector);
+const $$ = selector => [...document.querySelectorAll(selector)];
+
+function load() {
+  let data;
+  try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || structuredClone(DEMO); }
+  catch { data = structuredClone(DEMO); }
+  const oldSchema = data.schemaVersion !== SCHEMA_VERSION;
+  data.settings = {days: +(data.settings?.days || 6)};
+  data.selectedSetupState = data.selectedSetupState || DEFAULT_STATE;
+  data.selectedStaffState = data.selectedStaffState || DEFAULT_STATE;
+  data.selectedSchoolState = data.selectedSchoolState || DEFAULT_STATE;
+  data.selectedSchoolLocation = data.selectedSchoolLocation || DEMO_LOCATIONS[0];
+  data.rooms = normalizeRooms(data.rooms, oldSchema);
+  data.classes = (data.classes || []).map(item => ({...item, state: oldSchema ? DEFAULT_STATE : (item.state || DEFAULT_STATE), room: mapLocation(item.room)}));
+  data.teachers = (data.teachers || []).map((item, index) => normalizeTeacher(item, index, oldSchema));
+  data.staffWork = (data.staffWork || []).map(item => normalizeWork(item));
+  data.schemaVersion = SCHEMA_VERSION;
+  return data;
+}
+
+function normalizeRooms(rooms = [], oldSchema = false) {
+  const list = rooms.length ? rooms : DEMO_LOCATIONS;
+  return list.map((item, index) => {
+    const name = mapLocation(typeof item === 'string' ? item : item.name);
+    return {id: item.id || `r${index + 1}`, name, state: oldSchema ? DEFAULT_STATE : (item.state || DEFAULT_STATE)};
+  });
+}
+
+function normalizeTeacher(item, index, oldSchema = false) {
+  const parts = (item.name || '').trim().split(/\s+/);
+  const firstName = item.firstName || parts.shift() || '';
+  const lastName = item.lastName || parts.join(' ');
+  const activities = (item.activities?.length ? item.activities : ACTIVITIES).map(activity => LEGACY_ACTIVITY[activity] || activity);
+  if (!activities.includes('Travel')) activities.push('Travel');
+  return {
+    ...item,
+    firstName,
+    lastName,
+    name: `${firstName} ${lastName}`.trim(),
+    email: item.email || `${(item.code || `staff${index + 1}`).toLowerCase()}@visionempowertrust.org`,
+    phone: item.phone || '',
+    alternatePhone: item.alternatePhone || '',
+    code: (item.code || `${firstName[0] || 'S'}${lastName[0] || index + 1}`).toUpperCase(),
+    state: oldSchema ? DEFAULT_STATE : (item.state || DEFAULT_STATE),
+    role: item.role || 'Facilitator',
+    qualification: item.qualification || '',
+    specialEducator: item.specialEducator || 'No',
+    educator: item.educator || 'Yes',
+    locations: (item.locations?.length ? item.locations : [DEMO_LOCATIONS[index % DEMO_LOCATIONS.length]]).map(mapLocation),
+    activities: [...new Set(activities)]
+  };
+}
+
+function normalizeWork(item) {
+  const times = periodTimes(+item.period || 1);
+  const date = item.date || formatISODate(addDays(startOfWeek(new Date()), +item.day || 0));
+  return {
+    id: item.id || uid(),
+    teacherId: item.teacherId,
+    date,
+    startTime: item.startTime || times.start,
+    endTime: item.endTime || times.end,
+    activity: LEGACY_ACTIVITY[item.activity] || LEGACY_ACTIVITY[item.subject] || item.activity || item.subject || 'Other VE Work',
+    mode: item.mode || 'offline',
+    location: item.mode === 'online' ? '' : mapLocation(item.location || item.room || ''),
+    recurrence: item.recurrence || 'none',
+    repeatUntil: item.repeatUntil || '',
+    notes: item.notes || ''
+  };
+}
+
+function mapLocation(name = '') {
+  if (/^R-|Lab|Hall|Computer/i.test(name)) return DEMO_LOCATIONS[0];
+  return name || DEMO_LOCATIONS[0];
+}
+
+function save(silent = false) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (!silent) toast('Changes saved locally');
+}
+
+function showView(name) {
+  $$('.view').forEach(view => view.classList.toggle('active', view.id === `${name}-view`));
+  $$('[data-view]').forEach(item => item.classList.toggle('active', item.dataset.view === name));
+  const titles = {
+    dashboard: ['Academic year 2026–27', 'Good morning, Meera'],
+    setup: ['State-wise foundation', 'VE Field Setup'],
+    staff: ['Field team calendar', 'VE Staff Scheduling'],
+    school: ['School-wise calendar', 'VE School Scheduling']
+  };
+  $('#page-eyebrow').textContent = titles[name]?.[0] || titles.dashboard[0];
+  $('#page-title').textContent = titles[name]?.[1] || titles.dashboard[1];
+  $('.sidebar').classList.remove('open');
+  render();
+}
+
+function render() {
+  renderStateSelects();
+  renderDashboard();
+  renderSetup();
+  renderStaffPage();
+  renderSchoolPage();
+  $('#working-days').value = state.settings.days;
+}
+
+function renderStateSelects() {
+  setSelectOptions($('#setup-state-select'), STATES, state.selectedSetupState);
+  setSelectOptions($('#staff-state-filter'), STATES, state.selectedStaffState);
+  setSelectOptions($('#school-state-filter'), STATES, state.selectedSchoolState);
+}
+
+function renderDashboard() {
+  const setupState = state.selectedSetupState || DEFAULT_STATE;
+  const teachers = stateTeachers(setupState);
+  const classes = stateClasses(setupState);
+  const rooms = stateRooms(setupState);
+  const work = stateWork(setupState);
+  $('#metrics').innerHTML = [
+    ['♙', teachers.length, 'VE Staff'],
+    ['▣', classes.length, 'Classes'],
+    ['⌂', rooms.length, 'Schools'],
+    ['◷', work.length, 'Calendar events']
+  ].map(item => `<div class="metric"><div class="metric-top"><span class="metric-icon">${item[0]}</span></div><strong>${item[1]}</strong><small>${item[2]} · ${esc(setupState)}</small></div>`).join('');
+  const checks = [['VE staff added', !!teachers.length], ['Classes created', !!classes.length], ['Schools available', !!rooms.length], ['Events planned', !!work.length]];
+  const done = checks.filter(item => item[1]).length;
+  const pct = Math.round(done / checks.length * 100);
+  $('#ready-percent').textContent = `${pct}%`;
+  $('#ready-bar').style.width = `${pct}%`;
+  $('#checklist').innerHTML = checks.map(item => `<div class="check-item"><i>${item[1] ? '✓' : '·'}</i>${item[0]}</div>`).join('');
+  const loads = teachers.map(teacher => ({code: teacher.code, n: state.staffWork.filter(work => work.teacherId === teacher.id).length}));
+  const max = Math.max(...loads.map(item => item.n), 1);
+  $('#load-chart').innerHTML = loads.length ? loads.map(item => `<div class="bar-col"><i style="height:${item.n / max * 100}%" title="${item.n} events"></i><b>${esc(item.code)}</b></div>`).join('') : '<p class="empty-note">No calendar events yet for this state.</p>';
+}
+
+function renderSetup() {
+  const selected = state.selectedSetupState;
+  const teachers = stateTeachers(selected);
+  const classes = stateClasses(selected);
+  const rooms = stateRooms(selected);
+  $('#teacher-count').textContent = `${teachers.length} staff in ${selected}`;
+  $('#class-count').textContent = `${classes.length} class groups in ${selected}`;
+  $('#room-count').textContent = `${rooms.length} schools in ${selected}`;
+  $('#teachers-body').innerHTML = teachers.length ? teachers.map(t => `<tr><td><strong>${esc(t.name)}</strong><span class="muted">${esc(t.email)}</span></td><td>${esc(t.code)}</td><td class="staff-activities" title="${esc((t.activities || []).join(', '))}">${(t.activities || []).length} selected</td><td><button class="row-action" data-delete="teacher" data-id="${t.id}">×</button></td></tr>`).join('') : emptyRow(4, `No VE staff added for ${selected}.`);
+  $('#classes-body').innerHTML = classes.length ? classes.map(c => `<tr><td><strong>Grade ${esc(c.grade)}</strong></td><td>${esc(c.section)}</td><td>${esc(c.room)}</td><td><button class="row-action" data-delete="class" data-id="${c.id}">×</button></td></tr>`).join('') : emptyRow(4, `No classes added for ${selected}.`);
+  $('#rooms-list').innerHTML = rooms.length ? rooms.map(r => `<span class="tag">${esc(r.name)} <button class="row-action" data-delete="room" data-id="${r.id}">×</button></span>`).join('') : `<span class="empty-note">No schools added for ${esc(selected)}.</span>`;
+}
+
+function renderStaffPage() {
+  const selected = state.selectedStaffState;
+  const query = ($('#staff-search')?.value || '').toLowerCase();
+  const teachers = stateTeachers(selected);
+  const filtered = teachers.filter(t => !query || t.name.toLowerCase().includes(query));
+  const locations = [...new Set(teachers.flatMap(t => t.locations || []))];
+  const work = stateWork(selected);
+  $('#staff-metrics').innerHTML = [[teachers.length,'Registered staff'],[locations.length,'School locations'],[work.length,'Calendar events'],[countTravelEvents(work),'Travel events']].map(item => `<div class="staff-metric"><strong>${item[0]}</strong><span>${item[1]}</span></div>`).join('');
+  $('#staff-filter-count').textContent = `${filtered.length} of ${teachers.length} staff`;
+  $('#staff-directory-body').innerHTML = filtered.length ? filtered.map(t => `<tr><td><strong>${esc(t.name)}</strong><span class="muted">${esc(t.phone || '')}</span></td><td>${esc(t.email)}</td><td>${esc(t.state)}</td><td>${esc((t.locations || []).join(', ') || '—')}</td><td>${esc(t.role || '—')}</td><td><div class="table-actions"><button class="mini-action" data-schedule-staff="${t.id}">Calendar</button><button class="mini-action" data-edit="teacher" data-id="${t.id}">Edit</button><button class="row-action" data-delete="teacher" data-id="${t.id}">×</button></div></td></tr>`).join('') : emptyRow(6, `No staff found for ${selected}.`);
+  const person = $('#staff-calendar-person');
+  const old = person.value;
+  person.innerHTML = teachers.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  if (teachers.some(t => t.id === old)) person.value = old;
+  renderStaffCalendar();
+}
+
+function renderStaffCalendar() {
+  const table = $('#staff-calendar-table');
+  const teacherId = $('#staff-calendar-person').value;
+  const teacher = state.teachers.find(t => t.id === teacherId);
+  const dates = calendarDates(calendarWeekStart);
+  $('#calendar-week-label').textContent = weekLabel(dates);
+  if (!teacher) {
+    table.innerHTML = `<tbody><tr><td class="muted" style="padding:50px">Add a VE staff member in ${esc(state.selectedStaffState)} to begin scheduling.</td></tr></tbody>`;
+    $('#staff-risk-summary').innerHTML = riskList([`No VE staff selected for ${state.selectedStaffState}.`]);
+    return;
+  }
+  table.innerHTML = renderCalendarTable(dates, date => {
+    const iso = formatISODate(date);
+    const events = state.staffWork.filter(work => work.teacherId === teacherId && eventOccursOn(work, iso)).sort(sortByTime);
+    return {events, addSlot: `${teacherId}|${iso}`, empty: 'No work planned'};
+  });
+  $('#staff-risk-summary').innerHTML = buildStaffRiskSummary(teacher, dates);
+}
+
+function renderSchoolPage() {
+  const selectedState = state.selectedSchoolState;
+  const rooms = stateRooms(selectedState);
+  const locationSelect = $('#school-location-filter');
+  const oldLocation = state.selectedSchoolLocation;
+  locationSelect.innerHTML = rooms.map(room => `<option value="${esc(room.name)}">${esc(room.name)}</option>`).join('');
+  if (rooms.some(room => room.name === oldLocation)) locationSelect.value = oldLocation;
+  else {
+    locationSelect.value = rooms[0]?.name || '';
+    state.selectedSchoolLocation = locationSelect.value;
+  }
+  renderSchoolCalendar();
+}
+
+function renderSchoolCalendar() {
+  const table = $('#school-calendar-table');
+  const selectedState = state.selectedSchoolState;
+  const selectedLocation = state.selectedSchoolLocation;
+  const dates = calendarDates(schoolCalendarWeekStart);
+  $('#school-calendar-week-label').textContent = weekLabel(dates);
+  if (!selectedLocation) {
+    table.innerHTML = `<tbody><tr><td class="muted" style="padding:50px">Add a school in ${esc(selectedState)} to see school scheduling.</td></tr></tbody>`;
+    $('#school-risk-summary').innerHTML = riskList([`No school selected for ${selectedState}.`]);
+    return;
+  }
+  table.innerHTML = renderCalendarTable(dates, date => {
+    const iso = formatISODate(date);
+    const events = stateWork(selectedState).filter(work => work.location === selectedLocation && eventOccursOn(work, iso)).sort(sortByTime);
+    return {events, addSlot: '', empty: 'No school activity'};
+  }, true);
+  $('#school-risk-summary').innerHTML = buildSchoolRiskSummary(selectedState, selectedLocation, dates);
+}
+
+function renderCalendarTable(dates, eventProvider, readOnly = false) {
+  const today = formatISODate(new Date());
+  const head = `<thead><tr>${dates.map((date, index) => {
+    const iso = formatISODate(date);
+    return `<th class="${iso === today ? 'calendar-today' : ''}">${dayNames()[index]}<span class="calendar-date">${formatShortDate(date)}</span></th>`;
+  }).join('')}</tr></thead>`;
+  const body = dates.map(date => {
+    const iso = formatISODate(date);
+    const {events, addSlot, empty} = eventProvider(date);
+    const cards = events.map(work => calendarEventCard(work, iso, readOnly)).join('') || `<p class="calendar-empty">${esc(empty)}</p>`;
+    const add = !readOnly && addSlot ? `<button class="calendar-add" data-staff-slot="${esc(addSlot)}">+ Add event</button>` : '';
+    return `<td class="calendar-day-cell"><div class="calendar-events">${cards}</div>${add}</td>`;
+  }).join('');
+  return `${head}<tbody><tr>${body}</tr></tbody>`;
+}
+
+function calendarEventCard(work, iso, readOnly = false) {
+  const teacher = state.teachers.find(t => t.id === work.teacherId);
+  const slot = `${work.teacherId}|${iso}`;
+  const attrs = readOnly ? `data-work-id="${work.id}" data-staff-slot="${slot}"` : `data-work-id="${work.id}" data-staff-slot="${slot}"`;
+  return `<button class="calendar-event" ${attrs}><span>${esc(work.startTime)}–${esc(work.endTime)}${work.recurrence !== 'none' ? ' ↻' : ''}</span><strong>${esc(work.activity)}</strong><small>${esc(readOnly ? `${teacherName(work.teacherId)} · ${work.mode === 'online' ? 'Online' : work.location || 'Offline'}` : work.mode === 'online' ? 'Online' : work.location || 'Offline')}</small><em>Edit</em></button>`;
+}
+
+function openEditor(type, id = '', slot = '') {
+  const fields = $('#dialog-fields');
+  const dialog = $('#editor-dialog');
+  const form = $('#editor-form');
+  const record = type === 'teacher' ? state.teachers.find(t => t.id === id) : null;
+  editingId = id || null;
+  form.dataset.type = type;
+  form.dataset.slot = slot;
+  dialog.classList.toggle('staff-dialog', type === 'teacher');
+  const titles = {teacher: record ? 'Edit VE staff' : 'Add VE staff member', class:'Add class', room:'Add school location', calendarWork:'Schedule staff activity'};
+  $('#dialog-title').textContent = titles[type] || 'Add item';
+  if (type === 'teacher') fields.innerHTML = teacherFields(record);
+  if (type === 'class') fields.innerHTML = classFields();
+  if (type === 'room') fields.innerHTML = roomFields();
+  if (type === 'calendarWork') fields.innerHTML = workFields(id, slot);
+  dialog.showModal();
+  bindDialogControls();
+}
+
+function teacherFields(record = {}) {
+  const activeState = $('#staff-view')?.classList.contains('active') ? state.selectedStaffState : state.selectedSetupState;
+  const selectedState = record.state || activeState || DEFAULT_STATE;
+  return `
+    <label>First name<input name="firstName" value="${esc(record.firstName || '')}" required></label>
+    <label>Last name<input name="lastName" value="${esc(record.lastName || '')}" required></label>
+    <label>Email ID<input name="email" type="email" value="${esc(record.email || '')}" required></label>
+    <label>Phone<input name="phone" value="${esc(record.phone || '')}"></label>
+    <label>Alternate phone<input name="alternatePhone" value="${esc(record.alternatePhone || '')}"></label>
+    <label>Short code<input name="code" maxlength="4" value="${esc(record.code || '')}" required></label>
+    <label>State<select name="state">${STATES.map(s => `<option ${s === selectedState ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
+    <label>Role / designation<input name="role" value="${esc(record.role || 'Facilitator')}" required></label>
+    <label>Qualification<input name="qualification" value="${esc(record.qualification || '')}"></label>
+    <label>Special educator?<select name="specialEducator"><option ${record.specialEducator !== 'Yes' ? 'selected' : ''}>No</option><option ${record.specialEducator === 'Yes' ? 'selected' : ''}>Yes</option></select></label>
+    <label>Educator?<select name="educator"><option ${record.educator !== 'No' ? 'selected' : ''}>Yes</option><option ${record.educator === 'No' ? 'selected' : ''}>No</option></select></label>
+    <label class="location-picker"><span>Schools this staff member visits</span><div class="checkbox-grid">${stateRooms(selectedState).map(room => checkbox('locations', room.name, record.locations?.includes(room.name))).join('') || '<span class="muted">Add schools in this state first.</span>'}</div></label>
+    <label class="activity-picker"><span>Activities this staff member can do</span><div class="checkbox-grid">${ACTIVITIES.map(activity => checkbox('activities', activity, !record.id || record.activities?.includes(activity))).join('')}</div></label>`;
+}
+
+function classFields() {
+  const rooms = stateRooms(state.selectedSetupState);
+  return `<label>Class / grade<input name="grade" placeholder="6" required></label><label>Section<input name="section" placeholder="A" required></label><label class="full">Default location<select name="room" required>${rooms.map(room => `<option>${esc(room.name)}</option>`).join('')}</select></label>`;
+}
+
+function roomFields() {
+  return `<label class="full">School name<input name="name" placeholder="VNEB School" required></label>`;
+}
+
+function workFields(id, slot) {
+  const existing = state.staffWork.find(work => work.id === id);
+  const [teacherId, date] = slot.split('|');
+  const teacher = state.teachers.find(t => t.id === (existing?.teacherId || teacherId));
+  const activities = teacher?.activities?.length ? teacher.activities : ACTIVITIES;
+  const locations = teacher?.locations?.length ? teacher.locations : stateRooms(teacher?.state || state.selectedStaffState).map(room => room.name);
+  const work = existing || {date, startTime:'10:00', endTime:'11:00', activity:activities[0], mode:'offline', location:locations[0] || '', recurrence:'none', repeatUntil:'', notes:''};
+  return `
+    <label>Date<input type="date" name="date" value="${esc(work.date || date)}" required></label>
+    <label>Activity<select name="activity">${activities.map(activity => `<option ${activity === work.activity ? 'selected' : ''}>${esc(activity)}</option>`).join('')}</select></label>
+    <label>Start time<input type="time" name="startTime" value="${esc(work.startTime)}" required></label>
+    <label>End time<input type="time" name="endTime" value="${esc(work.endTime)}" required></label>
+    <label>Mode<select name="mode"><option value="offline" ${work.mode !== 'online' ? 'selected' : ''}>Offline</option><option value="online" ${work.mode === 'online' ? 'selected' : ''}>Online</option></select></label>
+    <label data-location-field>Location<select name="location">${locations.map(location => `<option ${location === work.location ? 'selected' : ''}>${esc(location)}</option>`).join('')}</select></label>
+    <label>Recurring<select name="recurrence"><option value="none" ${work.recurrence === 'none' ? 'selected' : ''}>Does not repeat</option><option value="daily" ${work.recurrence === 'daily' ? 'selected' : ''}>Daily</option><option value="weekdays" ${work.recurrence === 'weekdays' ? 'selected' : ''}>Every weekday</option><option value="weekly" ${work.recurrence === 'weekly' ? 'selected' : ''}>Weekly</option><option value="monthly" ${work.recurrence === 'monthly' ? 'selected' : ''}>Monthly</option></select></label>
+    <label data-repeat-until>Repeat until<input type="date" name="repeatUntil" value="${esc(work.repeatUntil || '')}"></label>
+    <label class="full">Notes<input name="notes" value="${esc(work.notes || '')}" placeholder="Optional note"></label>
+    ${existing ? `<label class="full"><button type="button" class="btn secondary" data-delete-work="${existing.id}">Delete this event / series</button></label>` : ''}`;
+}
+
+function bindDialogControls() {
+  const form = $('#editor-form');
+  const stateSelect = form.querySelector('[name="state"]');
+  if (stateSelect) stateSelect.addEventListener('change', () => {
+    const record = editingId ? state.teachers.find(t => t.id === editingId) : {...Object.fromEntries(new FormData(form)), id: editingId};
+    record.state = stateSelect.value;
+    $('#dialog-fields').innerHTML = teacherFields(record);
+    bindDialogControls();
+  });
+  const recurrence = form.querySelector('[name="recurrence"]');
+  const repeatUntil = form.querySelector('[data-repeat-until]');
+  const mode = form.querySelector('[name="mode"]');
+  const locationField = form.querySelector('[data-location-field]');
+  const sync = () => {
+    if (repeatUntil && recurrence) repeatUntil.classList.toggle('is-hidden', recurrence.value === 'none');
+    if (locationField && mode) locationField.classList.toggle('is-hidden', mode.value === 'online');
+  };
+  recurrence?.addEventListener('change', sync);
+  mode?.addEventListener('change', sync);
+  sync();
+}
+
+function submitEditor(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const type = form.dataset.type;
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData);
+  if (type === 'teacher') {
+    const activities = formData.getAll('activities');
+    const locations = formData.getAll('locations');
+    if (!activities.length) return toast('Select at least one activity for this staff member');
+    if (!locations.length) return toast('Select at least one school for this staff member');
+    const existing = state.teachers.find(t => t.id === editingId);
+    const teacher = {...(existing || {}), id: existing?.id || uid(), firstName:data.firstName, lastName:data.lastName, name:`${data.firstName} ${data.lastName}`.trim(), email:data.email, phone:data.phone, alternatePhone:data.alternatePhone, code:data.code.toUpperCase(), state:data.state, role:data.role, qualification:data.qualification, specialEducator:data.specialEducator, educator:data.educator, locations, activities};
+    if (existing) Object.assign(existing, teacher);
+    else state.teachers.push(teacher);
+    state.selectedSetupState = data.state;
+    state.selectedStaffState = data.state;
+  }
+  if (type === 'class') state.classes.push({id: uid(), grade:data.grade, section:data.section.toUpperCase(), room:data.room, state: state.selectedSetupState});
+  if (type === 'room') state.rooms.push({id: uid(), name:data.name, state: state.selectedSetupState});
+  if (type === 'calendarWork') {
+    const [slotTeacherId] = form.dataset.slot.split('|');
+    if (data.endTime <= data.startTime) return toast('End time must be after start time');
+    const existing = state.staffWork.find(work => work.id === editingId);
+    const work = {id: existing?.id || uid(), teacherId: existing?.teacherId || slotTeacherId, date:data.date, activity:data.activity, startTime:data.startTime, endTime:data.endTime, mode:data.mode, location:data.mode === 'online' ? '' : data.location, recurrence:data.recurrence || 'none', repeatUntil:data.recurrence === 'none' ? '' : data.repeatUntil, notes:data.notes || ''};
+    if (existing) Object.assign(existing, work);
+    else state.staffWork.push(work);
+  }
+  editingId = null;
+  save();
+  render();
+  $('#editor-dialog').close();
+}
+
+function remove(type, id) {
+  if (type === 'teacher') {
+    state.teachers = state.teachers.filter(item => item.id !== id);
+    state.staffWork = state.staffWork.filter(item => item.teacherId !== id);
+  }
+  if (type === 'class') state.classes = state.classes.filter(item => item.id !== id);
+  if (type === 'room') {
+    const room = state.rooms.find(item => item.id === id);
+    state.rooms = state.rooms.filter(item => item.id !== id);
+    if (room) state.teachers.forEach(teacher => teacher.locations = (teacher.locations || []).filter(location => location !== room.name));
+  }
+  save();
+  render();
+}
+
+function resetKarnatakaDemo() {
+  const fresh = structuredClone(DEMO);
+  state.teachers = state.teachers.filter(item => item.state !== DEFAULT_STATE).concat(fresh.teachers);
+  state.classes = state.classes.filter(item => item.state !== DEFAULT_STATE).concat(fresh.classes);
+  state.rooms = state.rooms.filter(item => item.state !== DEFAULT_STATE).concat(fresh.rooms);
+  state.staffWork = state.staffWork.filter(item => !fresh.teachers.some(t => t.id === item.teacherId)).concat(fresh.staffWork);
+  state.selectedSetupState = DEFAULT_STATE;
+  state.selectedStaffState = DEFAULT_STATE;
+  state.selectedSchoolState = DEFAULT_STATE;
+  state.selectedSchoolLocation = DEMO_LOCATIONS[0];
+  save();
+  render();
+}
+
+function buildStaffRiskSummary(teacher, dates) {
+  const events = dates.flatMap(date => {
+    const iso = formatISODate(date);
+    return state.staffWork.filter(work => work.teacherId === teacher.id && eventOccursOn(work, iso)).map(work => ({...work, occurrenceDate: iso}));
+  });
+  const risks = [];
+  const totalHours = events.reduce((sum, event) => sum + eventHours(event), 0);
+  const travelEvents = events.filter(event => /travel/i.test(event.activity)).length;
+  const offlineLocations = [...new Set(events.filter(event => event.mode !== 'online' && event.location).map(event => event.location))];
+  const dayHours = groupBy(events, 'occurrenceDate');
+  Object.entries(dayHours).forEach(([date, items]) => {
+    const hours = items.reduce((sum, item) => sum + eventHours(item), 0);
+    const locations = [...new Set(items.filter(item => item.location).map(item => item.location))];
+    if (hours > 7) risks.push(`${formatDisplayDate(new Date(`${date}T00:00:00`))}: ${teacher.name} has ${hours.toFixed(1)} planned hours, which may create effort risk.`);
+    if (locations.length > 1) risks.push(`${formatDisplayDate(new Date(`${date}T00:00:00`))}: multiple school locations (${locations.join(', ')}) may increase travel cost and delay risk.`);
+  });
+  if (totalHours > 36) risks.push(`Weekly load is ${totalHours.toFixed(1)} hours, which may be high for one staff member.`);
+  if (travelEvents > 2) risks.push(`${travelEvents} travel blocks appear this week; review transport cost and buffer time.`);
+  if (offlineLocations.length > 2) risks.push(`Work spans ${offlineLocations.length} schools this week; clustering visits may reduce cost.`);
+  if (!risks.length) risks.push(`No major effort, travel or cost risks detected for ${teacher.name} this week.`);
+  return riskList(risks);
+}
+
+function buildSchoolRiskSummary(selectedState, selectedLocation, dates) {
+  const events = dates.flatMap(date => {
+    const iso = formatISODate(date);
+    return stateWork(selectedState).filter(work => work.location === selectedLocation && eventOccursOn(work, iso)).map(work => ({...work, occurrenceDate: iso}));
+  });
+  const risks = [];
+  const staff = [...new Set(events.map(event => event.teacherId))];
+  const travelEvents = events.filter(event => /travel/i.test(event.activity)).length;
+  const dayEvents = groupBy(events, 'occurrenceDate');
+  Object.entries(dayEvents).forEach(([date, items]) => {
+    const staffCount = new Set(items.map(item => item.teacherId)).size;
+    if (items.length > 5) risks.push(`${formatDisplayDate(new Date(`${date}T00:00:00`))}: ${items.length} activities are planned at ${selectedLocation}; check room availability and school coordination effort.`);
+    if (staffCount > 3) risks.push(`${formatDisplayDate(new Date(`${date}T00:00:00`))}: ${staffCount} VE staff are visiting; transport and coordination cost may be higher.`);
+  });
+  if (travelEvents && travelEvents >= Math.max(2, events.length / 3)) risks.push(`Travel is a large share of planned activity for ${selectedLocation}; check if visits can be combined.`);
+  if (!staff.length) risks.push(`No activities are planned for ${selectedLocation} in this week.`);
+  else if (!risks.length) risks.push(`No major effort, cost or staffing risks detected for ${selectedLocation} this week.`);
+  return riskList(risks);
+}
+
+function riskList(items) {
+  return `<ul>${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
+}
+
+function exportStaffCalendar() {
+  const teacherId = $('#staff-calendar-person').value;
+  const teacher = state.teachers.find(t => t.id === teacherId);
+  const events = state.staffWork.filter(work => work.teacherId === teacherId && work.date).sort((a, b) => `${a.date}${a.startTime}`.localeCompare(`${b.date}${b.startTime}`));
+  if (!teacher) return toast('Select a VE staff member first');
+  if (!events.length) return toast(`No dated events to export for ${teacher.name}`);
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:PUBLISH','PRODID:-//Vision Empower Trust//VE Scheduler//EN',`X-WR-CALNAME:${icsText(`VE Scheduler - ${teacher.name}`)}`];
+  events.forEach(event => {
+    lines.push('BEGIN:VEVENT',`UID:${event.id}@vescheduler.visionempowertrust.org`,`DTSTAMP:${stamp}`,`DTSTART:${icsDate(event.date, event.startTime)}`,`DTEND:${icsDate(event.date, event.endTime)}`,`SUMMARY:${icsText(event.activity)}`,`LOCATION:${icsText(event.mode === 'online' ? 'Online' : event.location || '')}`,`DESCRIPTION:${icsText(event.notes || `Scheduled for ${teacher.name}`)}`);
+    const rule = recurrenceRule(event);
+    if (rule) lines.push(rule);
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], {type:'text/calendar;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `VE-Scheduler-${teacher.name.replace(/[^a-z0-9]+/gi, '-')}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  toast(`Calendar exported for ${teacher.name}`);
+}
+
+function eventOccursOn(event, isoDate) {
+  if (!event.date || isoDate < event.date) return false;
+  if (event.repeatUntil && isoDate > event.repeatUntil) return false;
+  if (event.recurrence === 'none') return isoDate === event.date;
+  const start = new Date(`${event.date}T00:00:00`);
+  const current = new Date(`${isoDate}T00:00:00`);
+  const days = Math.round((current - start) / 86400000);
+  if (event.recurrence === 'daily') return true;
+  if (event.recurrence === 'weekdays') return current.getDay() >= 1 && current.getDay() <= 5;
+  if (event.recurrence === 'weekly') return days % 7 === 0;
+  if (event.recurrence === 'monthly') return start.getDate() === current.getDate();
+  return false;
+}
+
+function recurrenceRule(event) {
+  if (!event.recurrence || event.recurrence === 'none') return '';
+  const freq = {daily:'DAILY',weekdays:'WEEKLY',weekly:'WEEKLY',monthly:'MONTHLY'}[event.recurrence];
+  const parts = [`RRULE:FREQ=${freq}`];
+  if (event.recurrence === 'weekdays') parts.push('BYDAY=MO,TU,WE,TH,FR');
+  if (event.repeatUntil) parts.push(`UNTIL=${icsDate(event.repeatUntil, '23:59')}`);
+  return parts.join(';');
+}
+
+function stateTeachers(selectedState) { return state.teachers.filter(item => item.state === selectedState); }
+function stateClasses(selectedState) { return state.classes.filter(item => item.state === selectedState); }
+function stateRooms(selectedState) { return state.rooms.filter(item => item.state === selectedState); }
+function stateWork(selectedState) { const ids = new Set(stateTeachers(selectedState).map(item => item.id)); return state.staffWork.filter(item => ids.has(item.teacherId)); }
+function teacherName(id) { return state.teachers.find(item => item.id === id)?.name || 'Unknown'; }
+function countTravelEvents(events) { return events.filter(event => /travel/i.test(event.activity)).length; }
+function sortByTime(a, b) { return a.startTime.localeCompare(b.startTime); }
+function emptyRow(cols, text) { return `<tr><td colspan="${cols}" class="muted" style="padding:32px">${esc(text)}</td></tr>`; }
+function checkbox(name, value, checked = false) { return `<label><input type="checkbox" name="${esc(name)}" value="${esc(value)}" ${checked ? 'checked' : ''}>${esc(value)}</label>`; }
+function setSelectOptions(select, options, value) { if (!select) return; const selected = options.includes(value) ? value : options[0]; select.innerHTML = options.map(option => `<option ${option === selected ? 'selected' : ''}>${esc(option)}</option>`).join(''); select.value = selected; }
+function groupBy(items, key) { return items.reduce((acc, item) => ((acc[item[key]] ||= []).push(item), acc), {}); }
+function eventHours(event) { const [sh, sm] = event.startTime.split(':').map(Number); const [eh, em] = event.endTime.split(':').map(Number); return Math.max(0, (eh * 60 + em - sh * 60 - sm) / 60); }
+function calendarDates(start) { return dayNames().map((_, index) => addDays(start, index)); }
+function weekLabel(dates) { return dates.length ? `${formatDisplayDate(dates[0])} – ${formatDisplayDate(dates[dates.length - 1])}` : ''; }
+function dayNames() { return ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].slice(0, +state.settings.days || 6); }
+function startOfWeek(date) { const d = new Date(date); const day = d.getDay() || 7; d.setDate(d.getDate() - day + 1); d.setHours(0,0,0,0); return d; }
+function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
+function formatISODate(date) { const d = new Date(date); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function formatShortDate(date) { return new Intl.DateTimeFormat('en-IN', {day:'2-digit', month:'short'}).format(date); }
+function formatDisplayDate(date) { return new Intl.DateTimeFormat('en-IN', {day:'2-digit', month:'short', year:'numeric'}).format(date); }
+function periodTimes(period) { const start = 9 * 60 + (period - 1) * 55; const end = start + 45; return {start: toTime(start), end: toTime(end)}; }
+function toTime(minutes) { return `${String(Math.floor(minutes / 60)).padStart(2,'0')}:${String(minutes % 60).padStart(2,'0')}`; }
+function icsDate(date, time) { const local = new Date(`${date}T${time}:00+05:30`); return local.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z'); }
+function icsText(text = '') { return String(text).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n'); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function esc(value = '') { return String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char])); }
+function toast(message) { const el = $('#toast'); el.textContent = message; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2200); }
+
+document.addEventListener('click', event => {
+  const view = event.target.closest('[data-view]');
+  const action = event.target.closest('[data-action]');
+  const add = event.target.closest('[data-add]');
+  const edit = event.target.closest('[data-edit]');
+  const del = event.target.closest('[data-delete]');
+  const staff = event.target.closest('[data-schedule-staff]');
+  const slot = event.target.closest('[data-staff-slot]');
+  const deleteWork = event.target.closest('[data-delete-work]');
+  const nav = event.target.closest('[data-calendar-nav]');
+  const schoolNav = event.target.closest('[data-school-calendar-nav]');
+  if (view) showView(view.dataset.view);
+  if (add) openEditor(add.dataset.add);
+  if (edit) openEditor(edit.dataset.edit, edit.dataset.id);
+  if (del) remove(del.dataset.delete, del.dataset.id);
+  if (staff) { showView('staff'); $('#staff-calendar-person').value = staff.dataset.scheduleStaff; renderStaffCalendar(); $('#staff-calendar-table').scrollIntoView({behavior:'smooth', block:'center'}); }
+  if (slot) openEditor('calendarWork', slot.dataset.workId || '', slot.dataset.staffSlot);
+  if (deleteWork) { state.staffWork = state.staffWork.filter(work => work.id !== deleteWork.dataset.deleteWork); save(); render(); $('#editor-dialog').close(); }
+  if (nav) { calendarWeekStart = nav.dataset.calendarNav === 'today' ? startOfWeek(new Date()) : addDays(calendarWeekStart, nav.dataset.calendarNav === 'next' ? 7 : -7); renderStaffCalendar(); }
+  if (schoolNav) { schoolCalendarWeekStart = schoolNav.dataset.schoolCalendarNav === 'today' ? startOfWeek(new Date()) : addDays(schoolCalendarWeekStart, schoolNav.dataset.schoolCalendarNav === 'next' ? 7 : -7); renderSchoolCalendar(); }
+  if (action?.dataset.action === 'export-ics') exportStaffCalendar();
+  if (action?.dataset.action === 'reset-demo') resetKarnatakaDemo();
+});
+
+$('#editor-form').addEventListener('submit', submitEditor);
+$('#setup-state-select').addEventListener('change', event => { state.selectedSetupState = event.target.value; save(true); render(); });
+$('#staff-state-filter').addEventListener('change', event => { state.selectedStaffState = event.target.value; save(true); renderStaffPage(); });
+$('#school-state-filter').addEventListener('change', event => { state.selectedSchoolState = event.target.value; state.selectedSchoolLocation = ''; save(true); renderSchoolPage(); });
+$('#school-location-filter').addEventListener('change', event => { state.selectedSchoolLocation = event.target.value; save(true); renderSchoolCalendar(); });
+$('#staff-search').addEventListener('input', renderStaffPage);
+$('#staff-calendar-person').addEventListener('change', renderStaffCalendar);
+$('#working-days').addEventListener('change', event => { state.settings.days = +event.target.value; save(); render(); });
+$('.mobile-menu').addEventListener('click', () => $('.sidebar').classList.toggle('open'));
+
+save(true);
+render();
