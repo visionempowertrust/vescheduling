@@ -285,6 +285,17 @@
   box-shadow: 0 5px 15px rgba(24,50,45,.12);
 }
 
+.calendar-event.conflict {
+  border-left-color: #c73535;
+  background: #ffe2e2;
+  color: #5d1515;
+}
+
+.calendar-event.conflict span,
+.calendar-event.conflict em {
+  color: #b52424;
+}
+
 .calendar-event span,
 .calendar-event strong,
 .calendar-event small {

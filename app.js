@@ -259,18 +259,19 @@ function renderCalendarTable(dates, eventProvider, readOnly = false) {
   const body = dates.map(date => {
     const iso = formatISODate(date);
     const {events, addSlot, empty} = eventProvider(date);
-    const cards = events.map(work => calendarEventCard(work, iso, readOnly)).join('') || `<p class="calendar-empty">${esc(empty)}</p>`;
+    const conflictIds = overlappingEventIds(events);
+    const cards = events.map(work => calendarEventCard(work, iso, readOnly, conflictIds.has(work.id))).join('') || `<p class="calendar-empty">${esc(empty)}</p>`;
     const add = !readOnly && addSlot ? `<button class="calendar-add" data-staff-slot="${esc(addSlot)}">+ Add event</button>` : '';
     return `<td class="calendar-day-cell"><div class="calendar-events">${cards}</div>${add}</td>`;
   }).join('');
   return `${head}<tbody><tr>${body}</tr></tbody>`;
 }
 
-function calendarEventCard(work, iso, readOnly = false) {
+function calendarEventCard(work, iso, readOnly = false, hasConflict = false) {
   const teacher = state.teachers.find(t => t.id === work.teacherId);
   const slot = `${work.teacherId}|${iso}`;
   const attrs = readOnly ? `data-work-id="${work.id}" data-staff-slot="${slot}"` : `data-work-id="${work.id}" data-staff-slot="${slot}"`;
-  return `<button class="calendar-event" ${attrs}><span>${esc(work.startTime)}–${esc(work.endTime)}${work.recurrence !== 'none' ? ' ↻' : ''}</span><strong>${esc(work.activity)}</strong><small>${esc(readOnly ? `${teacherName(work.teacherId)} · ${work.mode === 'online' ? 'Online' : work.location || 'Offline'}` : work.mode === 'online' ? 'Online' : work.location || 'Offline')}</small><em>Edit</em></button>`;
+  return `<button class="calendar-event ${hasConflict ? 'conflict' : ''}" ${attrs}><span>${esc(work.startTime)}–${esc(work.endTime)}${work.recurrence !== 'none' ? ' ↻' : ''}${hasConflict ? ' · Conflict' : ''}</span><strong>${esc(work.activity)}</strong><small>${esc(readOnly ? `${teacherName(work.teacherId)} · ${work.mode === 'online' ? 'Online' : work.location || 'Offline'}` : work.mode === 'online' ? 'Online' : work.location || 'Offline')}</small><em>Edit</em></button>`;
 }
 
 function openEditor(type, id = '', slot = '') {
@@ -438,6 +439,7 @@ function buildStaffRiskSummary(teacher, dates) {
   Object.entries(dayHours).forEach(([date, items]) => {
     const hours = items.reduce((sum, item) => sum + eventHours(item), 0);
     const locations = [...new Set(items.filter(item => item.location).map(item => item.location))];
+    if (overlappingEventIds(items).size) risks.push(`${formatDisplayDate(new Date(`${date}T00:00:00`))}: two or more activities overlap in time and are marked red on the calendar.`);
     if (hours > 7) risks.push(`${formatDisplayDate(new Date(`${date}T00:00:00`))}: ${teacher.name} has ${hours.toFixed(1)} planned hours, which may create effort risk.`);
     if (locations.length > 1) risks.push(`${formatDisplayDate(new Date(`${date}T00:00:00`))}: multiple school locations (${locations.join(', ')}) may increase travel cost and delay risk.`);
   });
@@ -459,6 +461,7 @@ function buildSchoolRiskSummary(selectedState, selectedLocation, dates) {
   const dayEvents = groupBy(events, 'occurrenceDate');
   Object.entries(dayEvents).forEach(([date, items]) => {
     const staffCount = new Set(items.map(item => item.teacherId)).size;
+    if (overlappingEventIds(items).size) risks.push(`${formatDisplayDate(new Date(`${date}T00:00:00`))}: overlapping school activities are marked red; confirm room and staff availability.`);
     if (items.length > 5) risks.push(`${formatDisplayDate(new Date(`${date}T00:00:00`))}: ${items.length} activities are planned at ${selectedLocation}; check room availability and school coordination effort.`);
     if (staffCount > 3) risks.push(`${formatDisplayDate(new Date(`${date}T00:00:00`))}: ${staffCount} VE staff are visiting; transport and coordination cost may be higher.`);
   });
@@ -534,6 +537,9 @@ function checkbox(name, value, checked = false) { return `<label><input type="ch
 function setSelectOptions(select, options, value) { if (!select) return; const selected = options.includes(value) ? value : options[0]; select.innerHTML = options.map(option => `<option ${option === selected ? 'selected' : ''}>${esc(option)}</option>`).join(''); select.value = selected; }
 function groupBy(items, key) { return items.reduce((acc, item) => ((acc[item[key]] ||= []).push(item), acc), {}); }
 function eventHours(event) { const [sh, sm] = event.startTime.split(':').map(Number); const [eh, em] = event.endTime.split(':').map(Number); return Math.max(0, (eh * 60 + em - sh * 60 - sm) / 60); }
+function overlappingEventIds(events) { const ids = new Set(); for (let i = 0; i < events.length; i++) for (let j = i + 1; j < events.length; j++) if (eventsOverlap(events[i], events[j])) { ids.add(events[i].id); ids.add(events[j].id); } return ids; }
+function eventsOverlap(a, b) { return timeToMinutes(a.startTime) < timeToMinutes(b.endTime) && timeToMinutes(b.startTime) < timeToMinutes(a.endTime); }
+function timeToMinutes(time = '00:00') { const [hours, minutes] = time.split(':').map(Number); return (hours || 0) * 60 + (minutes || 0); }
 function calendarDates(start) { return dayNames().map((_, index) => addDays(start, index)); }
 function weekLabel(dates) { return dates.length ? `${formatDisplayDate(dates[0])} – ${formatDisplayDate(dates[dates.length - 1])}` : ''; }
 function dayNames() { return ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].slice(0, +state.settings.days || 6); }
